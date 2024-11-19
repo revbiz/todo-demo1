@@ -43,7 +43,7 @@ export default function Home() {
       // Assign record numbers to new todos
       const newRecordNumbers = new Map();
       todosWithDates.forEach((todo: Todo, index: number) => {
-        newRecordNumbers.set(todo.id, index + 1);
+        newRecordNumbers.set(todo._id, index + 1);
       });
       setRecordNumbers(newRecordNumbers);
     } catch (error) {
@@ -55,75 +55,77 @@ export default function Home() {
     e.preventDefault();
     if (!newTodo.trim()) return;
 
-    const todo: Todo = {
-      id: Date.now().toString(),
-      text: newTodo.trim(),
-      completed: false,
-      createdAt: new Date().toISOString(), // Convert to ISO string before sending
-    };
-
     try {
-      console.log("Adding todo:", todo);
-      const response = await fetch("/api/todos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(todo),
+      const response = await fetch('/api/todos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: newTodo.trim() }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          `HTTP error! status: ${response.status}, details: ${
-            errorData.details || "Unknown error"
-          }`
-        );
+        throw new Error('Failed to add todo');
       }
 
-      const data = await response.json();
-      // Convert the ISO date strings back to Date objects
-      const todosWithDates = data.map((t: any) => ({
-        ...t,
-        createdAt: new Date(t.createdAt),
-      }));
-      setTodos(todosWithDates);
+      const newTodo = await response.json();
+      setTodos(prevTodos => [...prevTodos, newTodo]);
       setNewTodo("");
       setCurrentPage(1);
     } catch (error) {
-      console.error("Failed to add todo:", error);
+      console.error('Error adding todo:', error);
     }
   };
 
-  const toggleTodo = async (id: string) => {
-    const todo = todos.find((t) => t.id === id);
-    if (!todo) return;
-
+  const toggleTodo = async (todo: Todo) => {
     try {
-      await fetch("/api/todos", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, completed: !todo.completed }),
+      const response = await fetch('/api/todos', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          _id: todo._id,
+          completed: !todo.completed,
+        }),
       });
-      await fetchTodos();
+
+      if (!response.ok) {
+        throw new Error('Failed to update todo');
+      }
+
+      setTodos(prevTodos =>
+        prevTodos.map(t =>
+          t._id === todo._id ? { ...t, completed: !t.completed } : t
+        )
+      );
     } catch (error) {
-      console.error("Failed to update todo:", error);
+      console.error('Error updating todo:', error);
     }
   };
 
-  const deleteTodo = async (id: string) => {
+  const deleteTodo = async (todo: Todo) => {
     try {
-      await fetch("/api/todos", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
+      const response = await fetch('/api/todos', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ _id: todo._id }),
       });
-      await fetchTodos();
+
+      if (!response.ok) {
+        throw new Error('Failed to delete todo');
+      }
+
+      setTodos(prevTodos => prevTodos.filter(t => t._id !== todo._id));
     } catch (error) {
-      console.error("Failed to delete todo:", error);
+      console.error('Error deleting todo:', error);
     }
   };
 
   const startEditing = (todo: Todo) => {
-    setEditingId(todo.id);
+    setEditingId(todo._id);
     setEditText(todo.text);
   };
 
@@ -133,7 +135,7 @@ export default function Home() {
       await fetch("/api/todos", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, text: editText.trim() }),
+        body: JSON.stringify({ _id: id, text: editText.trim() }),
       });
       await fetchTodos();
     } catch (error) {
@@ -270,19 +272,19 @@ export default function Home() {
         <ul className="space-y-3 mb-4">
           {currentTodos.map((todo, index) => (
             <li
-              key={todo.id}
+              key={todo._id}
               className={`flex flex-col p-4 bg-gray-50 rounded-lg shadow-sm border-2 ${
                 todo.completed ? "border-gray-300" : "border-green-500"
               }`}
             >
-              {editingId === todo.id ? (
+              {editingId === todo._id ? (
                 <div className="mb-3">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-gray-600 w-16">
-                      Info {recordNumbers.get(todo.id)}:
+                      Info {recordNumbers.get(todo._id)}:
                     </span>
                     <input
-                      id={`edit-${todo.id}`}
+                      id={`edit-${todo._id}`}
                       type="text"
                       value={editText}
                       onChange={(e) => setEditText(e.target.value)}
@@ -295,7 +297,7 @@ export default function Home() {
                 <div className="mb-3">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-gray-600 w-16">
-                      Info {recordNumbers.get(todo.id)}:
+                      Info {recordNumbers.get(todo._id)}:
                     </span>
                     <p
                       className={`text-lg ${
@@ -315,7 +317,7 @@ export default function Home() {
                   <input
                     type="checkbox"
                     checked={todo.completed}
-                    onChange={() => toggleTodo(todo.id)}
+                    onChange={() => toggleTodo(todo)}
                     className="w-5 h-5 rounded border-gray-300 text-blue-500 focus:ring-blue-500"
                   />
                   <span
@@ -328,10 +330,10 @@ export default function Home() {
                 </div>
 
                 <div className="flex gap-2">
-                  {editingId === todo.id ? (
+                  {editingId === todo._id ? (
                     <>
                       <button
-                        onClick={() => saveEdit(todo.id)}
+                        onClick={() => saveEdit(todo._id)}
                         className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600"
                       >
                         Save
@@ -352,7 +354,7 @@ export default function Home() {
                         Edit
                       </button>
                       <button
-                        onClick={() => deleteTodo(todo.id)}
+                        onClick={() => deleteTodo(todo)}
                         className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
                       >
                         Delete
@@ -365,7 +367,7 @@ export default function Home() {
               <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 mt-2 pt-2 border-t border-gray-200">
                 <div>
                   <span className="font-medium">ID:</span>
-                  <span className="ml-1 font-mono">{todo.id}</span>
+                  <span className="ml-1 font-mono">{todo._id}</span>
                 </div>
                 <div>
                   <span className="font-medium">Created:</span>
