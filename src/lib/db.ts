@@ -1,6 +1,11 @@
 import { MongoClient, ObjectId } from 'mongodb';
 import { Todo } from '@/types/todo';
 
+// Define the MongoDB document type
+type TodoDocument = Omit<Todo, '_id'> & {
+  _id: ObjectId;
+};
+
 if (!process.env.MONGODB_URI) {
   throw new Error('Please add your MongoDB URI to .env.local');
 }
@@ -35,7 +40,7 @@ export { clientPromise };
 
 export async function getAllTodos(): Promise<Todo[]> {
   const client = await clientPromise;
-  const collection = client.db('todo-app').collection('todos');
+  const collection = client.db('todo-app').collection<TodoDocument>('todos');
   const todos = await collection.find({}).toArray();
   return todos.map(todo => ({
     ...todo,
@@ -45,7 +50,7 @@ export async function getAllTodos(): Promise<Todo[]> {
 
 export async function addTodo(todo: Omit<Todo, '_id'>): Promise<Todo> {
   const client = await clientPromise;
-  const collection = client.db('todo-app').collection('todos');
+  const collection = client.db('todo-app').collection<TodoDocument>('todos');
   const result = await collection.insertOne({
     ...todo,
     _id: new ObjectId()
@@ -62,7 +67,7 @@ export async function updateTodo(
 ): Promise<void> {
   try {
     const client = await clientPromise;
-    const collection = client.db('todo-app').collection('todos');
+    const collection = client.db('todo-app').collection<TodoDocument>('todos');
     const objectId = new ObjectId(id);
     await collection.updateOne(
       { _id: objectId },
@@ -77,7 +82,7 @@ export async function updateTodo(
 export async function deleteTodo(id: string): Promise<void> {
   try {
     const client = await clientPromise;
-    const collection = client.db('todo-app').collection('todos');
+    const collection = client.db('todo-app').collection<TodoDocument>('todos');
     const objectId = new ObjectId(id);
     await collection.deleteOne({ _id: objectId });
   } catch (error) {
