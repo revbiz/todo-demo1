@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAllTodos, addTodo, updateTodo, deleteTodo } from '@/lib/db';
 import { Todo } from '@/types/todo';
-import { ObjectId } from 'mongodb';
 
 export async function GET() {
   try {
@@ -19,14 +18,12 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const data = await request.json();
-    const todo: Todo = {
-      _id: new ObjectId().toString(), // Generate new MongoDB ID
+    const newTodo = await addTodo({
       text: data.text,
       completed: false,
       createdAt: new Date().toISOString()
-    };
-    await addTodo(todo);
-    return NextResponse.json(todo);
+    });
+    return NextResponse.json(newTodo);
   } catch (error) {
     console.error('Error in POST /api/todos:', error);
     return NextResponse.json(
@@ -44,6 +41,12 @@ export async function PUT(request: Request) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error in PUT /api/todos:', error);
+    if (error instanceof Error && error.message.includes('24 character hex string')) {
+      return NextResponse.json(
+        { error: 'Invalid todo ID format' },
+        { status: 400 }
+      );
+    }
     return NextResponse.json(
       { error: 'Failed to update todo' },
       { status: 500 }
@@ -53,11 +56,24 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const data = await request.json();
-    await deleteTodo(data._id);
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Todo ID is required' },
+        { status: 400 }
+      );
+    }
+    await deleteTodo(id);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error in DELETE /api/todos:', error);
+    if (error instanceof Error && error.message.includes('24 character hex string')) {
+      return NextResponse.json(
+        { error: 'Invalid todo ID format' },
+        { status: 400 }
+      );
+    }
     return NextResponse.json(
       { error: 'Failed to delete todo' },
       { status: 500 }

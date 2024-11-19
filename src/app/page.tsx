@@ -5,6 +5,11 @@ import { Todo } from "@/types/todo";
 
 const ITEMS_PER_PAGE = 3;
 
+// Helper function to get the last 8 characters of an ID
+const getShortId = (id: string) => {
+  return id.slice(-8);
+};
+
 export default function Home() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [newTodo, setNewTodo] = useState("");
@@ -68,9 +73,18 @@ export default function Home() {
         throw new Error('Failed to add todo');
       }
 
-      const newTodo = await response.json();
-      setTodos(prevTodos => [...prevTodos, newTodo]);
+      const addedTodo = await response.json();
+      setTodos(prevTodos => [...prevTodos, {
+        ...addedTodo,
+        createdAt: new Date(addedTodo.createdAt)
+      }]);
       setNewTodo("");
+      
+      // Update record numbers
+      const newRecordNumbers = new Map(recordNumbers);
+      newRecordNumbers.set(addedTodo._id, todos.length + 1);
+      setRecordNumbers(newRecordNumbers);
+      
       setCurrentPage(1);
     } catch (error) {
       console.error('Error adding todo:', error);
@@ -106,19 +120,24 @@ export default function Home() {
 
   const deleteTodo = async (todo: Todo) => {
     try {
-      const response = await fetch('/api/todos', {
+      const response = await fetch(`/api/todos?id=${todo._id}`, {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ _id: todo._id }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete todo');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete todo');
       }
 
       setTodos(prevTodos => prevTodos.filter(t => t._id !== todo._id));
+      
+      // Update record numbers
+      const newRecordNumbers = new Map();
+      const remainingTodos = todos.filter(t => t._id !== todo._id);
+      remainingTodos.forEach((todo, index) => {
+        newRecordNumbers.set(todo._id, index + 1);
+      });
+      setRecordNumbers(newRecordNumbers);
     } catch (error) {
       console.error('Error deleting todo:', error);
     }
@@ -367,7 +386,7 @@ export default function Home() {
               <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 mt-2 pt-2 border-t border-gray-200">
                 <div>
                   <span className="font-medium">ID:</span>
-                  <span className="ml-1 font-mono">{todo._id}</span>
+                  <span className="ml-1 font-mono text-gray-500">...{getShortId(todo._id)}</span>
                 </div>
                 <div>
                   <span className="font-medium">Created:</span>

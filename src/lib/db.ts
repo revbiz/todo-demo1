@@ -43,29 +43,45 @@ export async function getAllTodos(): Promise<Todo[]> {
   }));
 }
 
-export async function addTodo(todo: Todo): Promise<void> {
+export async function addTodo(todo: Omit<Todo, '_id'>): Promise<Todo> {
   const client = await clientPromise;
   const collection = client.db('todo-app').collection('todos');
-  await collection.insertOne({
+  const result = await collection.insertOne({
     ...todo,
-    _id: new ObjectId(todo._id)
+    _id: new ObjectId()
   });
+  return {
+    ...todo,
+    _id: result.insertedId.toString()
+  };
 }
 
 export async function updateTodo(
   id: string,
   updates: { completed?: boolean; text?: string }
 ): Promise<void> {
-  const client = await clientPromise;
-  const collection = client.db('todo-app').collection('todos');
-  await collection.updateOne(
-    { _id: new ObjectId(id) },
-    { $set: updates }
-  );
+  try {
+    const client = await clientPromise;
+    const collection = client.db('todo-app').collection('todos');
+    const objectId = new ObjectId(id);
+    await collection.updateOne(
+      { _id: objectId },
+      { $set: updates }
+    );
+  } catch (error) {
+    console.error('Error in updateTodo:', error);
+    throw error;
+  }
 }
 
 export async function deleteTodo(id: string): Promise<void> {
-  const client = await clientPromise;
-  const collection = client.db('todo-app').collection('todos');
-  await collection.deleteOne({ _id: new ObjectId(id) });
+  try {
+    const client = await clientPromise;
+    const collection = client.db('todo-app').collection('todos');
+    const objectId = new ObjectId(id);
+    await collection.deleteOne({ _id: objectId });
+  } catch (error) {
+    console.error('Error in deleteTodo:', error);
+    throw error;
+  }
 }
