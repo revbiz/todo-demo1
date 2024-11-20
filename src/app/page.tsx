@@ -13,8 +13,11 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-// @ts-ignore
-export default async function Page({ searchParams = {} }: any) {
+export default async function Page({
+  searchParams = {},
+}: {
+  searchParams: { [key: string]: string | string[] | undefined };
+}) {
   const selectedCategory = ((searchParams.category as string) || 'All') as TodoCategory | 'All';
   const selectedPriority = ((searchParams.priority as string) || 'All') as Priority | 'All';
   const selectedStatus = ((searchParams.status as string) || 'All') as Status | 'All';
@@ -63,6 +66,14 @@ export default async function Page({ searchParams = {} }: any) {
     take: ITEMS_PER_PAGE,
   });
 
+  // Serialize searchParams
+  const serializedSearchParams = Object.fromEntries(
+    Object.entries(searchParams).map(([key, value]) => [
+      key,
+      Array.isArray(value) ? value[0] : value
+    ])
+  );
+
   return (
     <TodoPage
       todos={todos}
@@ -74,7 +85,7 @@ export default async function Page({ searchParams = {} }: any) {
       selectedStatus={selectedStatus}
       sortField={sortField}
       sortOrder={sortOrder}
-      searchParams={searchParams}
+      searchParams={serializedSearchParams}
     />
   );
 }
