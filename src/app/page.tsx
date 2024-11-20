@@ -25,13 +25,13 @@ const defaultParams = {
 
 type SearchParams = { [key: string]: string | string[] | undefined };
 
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: Promise<SearchParams>;
-}) {
-  // Await and destructure searchParams with defaults
-  const params = await searchParams;
+interface PageProps {
+  searchParams?: SearchParams;
+}
+
+export default async function Page({ searchParams = {} }: PageProps) {
+  // Convert searchParams to a Promise
+  const params = await Promise.resolve(searchParams);
   const {
     category = defaultParams.category,
     priority = defaultParams.priority,
