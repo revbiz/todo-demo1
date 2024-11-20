@@ -13,17 +13,36 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function Page({
-  searchParams = {},
-}: {
-  searchParams: { [key: string]: string | string[] | undefined };
+// Default values for parameters
+const defaultParams = {
+  category: 'All',
+  priority: 'All',
+  status: 'All',
+  page: '1',
+  sortField: 'createdAt',
+  sortOrder: 'desc'
+} as const;
+
+export default async function Page(props: {
+  searchParams?: { [key: string]: string | string[] | undefined };
 }) {
-  const selectedCategory = ((searchParams.category as string) || 'All') as TodoCategory | 'All';
-  const selectedPriority = ((searchParams.priority as string) || 'All') as Priority | 'All';
-  const selectedStatus = ((searchParams.status as string) || 'All') as Status | 'All';
-  const currentPage = Number(searchParams.page) || 1;
-  const sortField = ((searchParams.sortField as string) || 'createdAt') as SortField;
-  const sortOrder = ((searchParams.sortOrder as string) || 'desc') as SortOrder;
+  // Await and destructure searchParams with defaults
+  const {
+    category = defaultParams.category,
+    priority = defaultParams.priority,
+    status = defaultParams.status,
+    page = defaultParams.page,
+    sortField = defaultParams.sortField,
+    sortOrder = defaultParams.sortOrder,
+  } = await Promise.resolve(props.searchParams ?? {});
+
+  // Convert values with proper typing
+  const selectedCategory = (Array.isArray(category) ? category[0] : category) as TodoCategory | 'All';
+  const selectedPriority = (Array.isArray(priority) ? priority[0] : priority) as Priority | 'All';
+  const selectedStatus = (Array.isArray(status) ? status[0] : status) as Status | 'All';
+  const currentPage = Number(Array.isArray(page) ? page[0] : page) || 1;
+  const selectedSortField = (Array.isArray(sortField) ? sortField[0] : sortField) as SortField;
+  const selectedSortOrder = (Array.isArray(sortOrder) ? sortOrder[0] : sortOrder) as SortOrder;
 
   // Get total count for pagination
   const totalCount = await prisma.todo.count({
@@ -60,19 +79,21 @@ export default async function Page({
       ],
     },
     orderBy: {
-      [sortField]: sortOrder,
+      [selectedSortField]: selectedSortOrder,
     },
     skip: (currentPage - 1) * ITEMS_PER_PAGE,
     take: ITEMS_PER_PAGE,
   });
 
-  // Serialize searchParams
-  const serializedSearchParams = Object.fromEntries(
-    Object.entries(searchParams).map(([key, value]) => [
-      key,
-      Array.isArray(value) ? value[0] : value
-    ])
-  );
+  // Create a simplified searchParams object for the client
+  const serializedSearchParams: { [key: string]: string } = {
+    category: selectedCategory,
+    priority: selectedPriority,
+    status: selectedStatus,
+    page: String(currentPage),
+    sortField: selectedSortField,
+    sortOrder: selectedSortOrder
+  };
 
   return (
     <TodoPage
@@ -83,8 +104,8 @@ export default async function Page({
       selectedCategory={selectedCategory}
       selectedPriority={selectedPriority}
       selectedStatus={selectedStatus}
-      sortField={sortField}
-      sortOrder={sortOrder}
+      sortField={selectedSortField}
+      sortOrder={selectedSortOrder}
       searchParams={serializedSearchParams}
     />
   );
