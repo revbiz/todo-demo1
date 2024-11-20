@@ -2,7 +2,7 @@ import './globals.css'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Todo App',
+  title: 'Todo App SQLite',
   description: 'A simple todo app built with Next.js',
 }
 

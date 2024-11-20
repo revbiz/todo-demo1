@@ -1,62 +1,114 @@
 import { NextResponse } from 'next/server';
-import { getAllTodos, addTodo, updateTodo, deleteTodo } from '@/lib/db';
-import { Todo } from '@/types/todo';
+import { prisma } from '@/lib/db';
+import { TodoCategory, Priority, Status } from '@prisma/client';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const todos = await getAllTodos();
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (id) {
+      const todo = await prisma.todo.findUnique({ where: { id } });
+      if (!todo) {
+        return NextResponse.json(
+          { error: 'Todo not found' },
+          { status: 404 }
+        );
+      }
+      return NextResponse.json(todo);
+    }
+
+    const todos = await prisma.todo.findMany({
+      orderBy: { createdAt: 'desc' }
+    });
     return NextResponse.json(todos);
   } catch (error) {
-    console.error('Failed to fetch todos:', error);
-    return NextResponse.json({ 
-      error: 'Failed to fetch todos',
-      details: error instanceof Error ? error.message : String(error)
-    }, { status: 500 });
+    console.error("Error fetching todos:", error);
+    return NextResponse.json(
+      { error: "Error fetching todos" },
+      { status: 500 }
+    );
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const todo: Todo = await request.json();
-    console.log('Received todo:', todo);
-    await addTodo(todo);
-    const todos = await getAllTodos();
-    return NextResponse.json(todos);
+    const json = await request.json();
+    
+    if (!json.title?.trim()) {
+      return NextResponse.json(
+        { error: 'Title is required' },
+        { status: 400 }
+      );
+    }
+
+    const todo = await prisma.todo.create({
+      data: {
+        title: json.title.trim(),
+        content: json.content || '',
+        category: json.category as TodoCategory,
+        priority: json.priority as Priority,
+        status: json.status as Status,
+      }
+    });
+
+    return NextResponse.json(todo);
   } catch (error) {
-    console.error('Failed to add todo:', error);
-    return NextResponse.json({ 
-      error: 'Failed to add todo',
-      details: error instanceof Error ? error.message : String(error)
-    }, { status: 500 });
+    console.error("Error creating todo:", error);
+    return NextResponse.json({ message: "Error creating todo", error }, { status: 500 });
   }
 }
 
 export async function PUT(request: Request) {
   try {
-    const { id, completed, text } = await request.json();
-    await updateTodo(id, { completed, text });
-    const todos = await getAllTodos();
-    return NextResponse.json(todos);
+    const json = await request.json();
+    
+    if (!json.id) {
+      return NextResponse.json(
+        { error: "Todo ID is required" },
+        { status: 400 }
+      );
+    }
+
+    const updateData: any = {
+      title: json.title?.trim(),
+      content: json.content,
+      priority: json.priority as Priority,
+      status: json.status as Status,
+    };
+
+    if (json.category) {
+      updateData.category = json.category as TodoCategory;
+    }
+
+    const todo = await prisma.todo.update({
+      where: { id: json.id },
+      data: updateData,
+    });
+
+    return NextResponse.json(todo);
   } catch (error) {
-    console.error('Failed to update todo:', error);
-    return NextResponse.json({ 
-      error: 'Failed to update todo',
-      details: error instanceof Error ? error.message : String(error)
-    }, { status: 500 });
+    console.error("Error updating todo:", error);
+    return NextResponse.json({ message: "Error updating todo", error }, { status: 500 });
   }
 }
 
 export async function DELETE(request: Request) {
   try {
-    const { id } = await request.json();
-    await deleteTodo(id);
-    const todos = await getAllTodos();
-    return NextResponse.json(todos);
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Todo ID is required' },
+        { status: 400 }
+      );
+    }
+
+    await prisma.todo.delete({ where: { id } });
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Failed to delete todo:', error);
-    return NextResponse.json({ 
-      error: 'Failed to delete todo',
-      details: error instanceof Error ? error.message : String(error)
-    }, { status: 500 });
+    console.error("Error deleting todo:", error);
+    return NextResponse.json({ message: "Error deleting todo", error }, { status: 500 });
   }
 }

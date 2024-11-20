@@ -1,0 +1,25 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_PRISMA_URL")
+}
+
+enum TodoCategory {
+  Event
+  Reminder
+  Someday
+  Now
+}
+
+model Todo {
+  id        String       @id @default(cuid())
+  title     String
+  content   String?
+  completed Boolean      @default(false)
+  category  TodoCategory @default(Now)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}

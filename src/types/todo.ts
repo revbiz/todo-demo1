@@ -1,6 +1,11 @@
+export type TodoCategory = 'Event' | 'Reminder' | 'Someday' | 'Now';
+
 export interface Todo {
   id: string;
-  text: string;
+  title: string;
+  content?: string | null;
   completed: boolean;
-  createdAt: string; // Changed from Date to string for API communication
+  category: TodoCategory;
+  createdAt: Date;
+  updatedAt: Date;
 }
