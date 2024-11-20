@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "dev:vercel": "cross-env DATABASE_URL=\"$POSTGRES_URL\" next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "prisma:generate": "prisma generate",
