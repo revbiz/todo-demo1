@@ -10,7 +10,7 @@ interface StatusFilterProps {
 export function StatusFilter({ selectedStatus }: StatusFilterProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const statuses: (Status | 'All')[] = ['All', 'Active', 'Pending', 'Complete', 'Forget', 'OnHold'];
+  const statuses: (Status | 'All')[] = ['All', 'Active', 'Pending', 'Complete', 'OnHold'];
 
   const handleStatusChange = (status: Status | 'All') => {
     const category = searchParams.get('category') || 'All';

@@ -2,16 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import TextStyle from "@tiptap/extension-text-style";
+import { Editor } from "@tiptap/core";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import TextStyle from "@tiptap/extension-text-style";
-import Color from "@tiptap/extension-color";
+import { Color } from "@tiptap/extension-color";
 import Link from 'next/link';
-import { TodoCategory, Priority, Status } from "@prisma/client";
+import type { Priority, Status } from "@prisma/client";
 
 // Define the categories type
 const CATEGORIES = ['Event', 'Reminder', 'Someday', 'Now'] as const;
-type TodoCategory = typeof CATEGORIES[number];
+type Category = typeof CATEGORIES[number];
 
 const COLORS = [
   "#000000", // black
@@ -32,7 +33,7 @@ type TodoStatus = typeof STATUSES[number];
 export default function AddTodo() {
   const router = useRouter();
   const [showColorPicker, setShowColorPicker] = useState(false);
-  const [category, setCategory] = useState<TodoCategory>('Now');
+  const [category, setCategory] = useState<Category>('Now');
   const [priority, setPriority] = useState<TodoPriority>('Medium');
   const [status, setStatus] = useState<TodoStatus>('Active');
   const [error, setError] = useState<string | null>(null);
@@ -140,7 +141,7 @@ export default function AddTodo() {
         </label>
         <select
           value={category}
-          onChange={(e) => setCategory(e.target.value as TodoCategory)}
+          onChange={(e) => setCategory(e.target.value as Category)}
           disabled={isSubmitting}
           className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
         >

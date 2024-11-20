@@ -28,7 +28,6 @@ enum Status {
   Active
   Pending
   Complete
-  Forget
   OnHold
 }
 

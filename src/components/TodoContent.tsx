@@ -1,15 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 
 interface TodoContentProps {
   content: string;
-  todoId: string;
-  isTruncated: boolean;
 }
 
-export function TodoContent({ content, todoId, isTruncated }: TodoContentProps) {
+export function TodoContent({ content }: TodoContentProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -29,19 +26,9 @@ export function TodoContent({ content, todoId, isTruncated }: TodoContentProps) 
   }
 
   return (
-    <>
-      <div 
-        className="text-gray-800 [&_p]:mb-0 [&_span]:mb-0" 
-        dangerouslySetInnerHTML={{ __html: content }} 
-      />
-      {isTruncated && (
-        <Link
-          href={`/view?id=${todoId}`}
-          className="text-blue-500 hover:text-blue-600 ml-1"
-        >
-          Read more...
-        </Link>
-      )}
-    </>
+    <div 
+      className="text-gray-800 [&_p]:mb-0 [&_span]:mb-0" 
+      dangerouslySetInnerHTML={{ __html: content }} 
+    />
   );
 }

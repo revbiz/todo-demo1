@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Todo } from "@/types/todo";
@@ -26,7 +26,7 @@ function formatContent(content: string): string {
   </div>`;
 }
 
-export default function ViewTodo() {
+function TodoView() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const todoId = searchParams.get("id");
@@ -55,103 +55,134 @@ export default function ViewTodo() {
     }
   };
 
-  const deleteTodo = async () => {
-    if (!todo?.id) return;
-
-    try {
-      const response = await fetch("/api/todos", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ id: todo.id }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to delete todo");
-      }
-
-      router.push("/");
-      router.refresh();
-    } catch (error) {
-      console.error("Failed to delete todo:", error);
-      setError("Failed to delete todo");
-    }
-  };
-
   if (loading) {
-    return <div className="text-center p-4">Loading...</div>;
-  }
-
-  if (error) {
-    return <div className="text-red-500 text-center p-4">{error}</div>;
-  }
-
-  if (!todo) {
-    return <div className="text-center p-4">Todo not found</div>;
-  }
-
-  return (
-    <main className="min-h-screen bg-gray-100 py-8">
+    return (
       <div className="max-w-4xl mx-auto p-4">
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          {/* Header */}
-          <div className="bg-blue-500 p-4 flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-white">Todo Details</h1>
-            <div className="flex gap-2">
-              <Link
-                href={`/edit?id=${todo.id}`}
-                className="px-4 py-2 bg-white text-blue-500 rounded-md hover:bg-blue-50 transition-colors duration-200"
-              >
-                Edit
-              </Link>
-              <button
-                onClick={deleteTodo}
-                className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors duration-200"
-              >
-                Delete
-              </button>
-              <Link
-                href="/"
-                className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors duration-200"
-              >
-                Back
-              </Link>
-            </div>
-          </div>
-
-          {/* Content */}
-          <div className="p-6">
-            <div className="space-y-4">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-700">Content:</h2>
-                <div 
-                  className="mt-2 prose prose-sm whitespace-pre-line border rounded-md p-4 pl-6"
-                  dangerouslySetInnerHTML={{ 
-                    __html: todo.content ? formatContent(todo.content) : todo.title 
-                  }}
-                />
-              </div>
-
-              <div>
-                <h2 className="text-lg font-semibold text-gray-700">Created:</h2>
-                <p className="text-gray-600">
-                  {new Date(todo.createdAt).toLocaleString()}
-                </p>
-              </div>
-
-              {todo.updatedAt && todo.updatedAt !== todo.createdAt && (
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-700">Last Updated:</h2>
-                  <p className="text-gray-600">
-                    {new Date(todo.updatedAt).toLocaleString()}
-                  </p>
-                </div>
-              )}
-            </div>
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="space-y-3">
+            <div className="h-4 bg-gray-200 rounded w-full"></div>
+            <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+            <div className="h-4 bg-gray-200 rounded w-4/6"></div>
           </div>
         </div>
       </div>
-    </main>
+    );
+  }
+
+  if (error || !todo) {
+    return (
+      <div className="max-w-4xl mx-auto p-4">
+        <div className="bg-red-100 text-red-700 p-4 rounded-md">
+          {error || "Todo not found"}
+        </div>
+        <div className="mt-4">
+          <Link
+            href="/"
+            className="text-blue-500 hover:text-blue-700"
+          >
+            ← Back to Todos
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto p-4">
+      <div className="flex justify-between items-center mb-6">
+        <Link
+          href="/"
+          className="text-blue-500 hover:text-blue-700"
+        >
+          ← Back to Todos
+        </Link>
+        <Link
+          href={`/edit/${todo.id}`}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
+          Edit Todo
+        </Link>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-lg p-6">
+        <h1 className="text-2xl font-bold mb-4">{todo.title}</h1>
+
+        <div className="flex gap-2 mb-4">
+          <span
+            className={`px-2 py-1 text-sm rounded-full ${
+              todo.category === 'Event'
+                ? 'bg-purple-100 text-purple-800'
+                : todo.category === 'Reminder'
+                ? 'bg-yellow-100 text-yellow-800'
+                : todo.category === 'Someday'
+                ? 'bg-green-100 text-green-800'
+                : 'bg-blue-100 text-blue-800'
+            }`}
+          >
+            {todo.category}
+          </span>
+          <span
+            className={`px-2 py-1 text-sm rounded-full ${
+              todo.priority === 'High'
+                ? 'bg-red-100 text-red-800'
+                : todo.priority === 'Medium'
+                ? 'bg-orange-100 text-orange-800'
+                : 'bg-green-100 text-green-800'
+            }`}
+          >
+            {todo.priority}
+          </span>
+          <span
+            className={`px-2 py-1 text-sm rounded-full ${
+              todo.status === 'Active'
+                ? 'bg-blue-100 text-blue-800'
+                : todo.status === 'Pending'
+                ? 'bg-yellow-100 text-yellow-800'
+                : todo.status === 'Complete'
+                ? 'bg-green-100 text-green-800'
+                : todo.status === 'OnHold'
+                ? 'bg-gray-100 text-gray-800'
+                : 'bg-red-100 text-red-800'
+            }`}
+          >
+            {todo.status}
+          </span>
+        </div>
+
+        {todo.content && (
+          <div 
+            className="prose prose-sm max-w-none mb-6"
+            dangerouslySetInnerHTML={{ __html: formatContent(todo.content) }}
+          />
+        )}
+
+        <div className="text-sm text-gray-500 space-y-1">
+          <div>Created: {new Date(todo.createdAt).toLocaleString()}</div>
+          {todo.updatedAt && todo.updatedAt !== todo.createdAt && (
+            <div>Updated: {new Date(todo.updatedAt).toLocaleString()}</div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function ViewTodoPage() {
+  return (
+    <Suspense fallback={
+      <div className="max-w-4xl mx-auto p-4">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="space-y-3">
+            <div className="h-4 bg-gray-200 rounded w-full"></div>
+            <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+            <div className="h-4 bg-gray-200 rounded w-4/6"></div>
+          </div>
+        </div>
+      </div>
+    }>
+      <TodoView />
+    </Suspense>
   );
 }
