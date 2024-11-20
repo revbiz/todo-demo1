@@ -23,15 +23,11 @@ const defaultParams = {
   sortOrder: 'desc'
 } as const;
 
-type SearchParams = { [key: string]: string | string[] | undefined };
-
-interface PageProps {
-  searchParams?: SearchParams;
-}
-
-export default async function Page({ searchParams = {} }: PageProps) {
-  // Convert searchParams to a Promise
-  const params = await Promise.resolve(searchParams);
+export default async function Page(props: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
+  const searchParams = await props.searchParams;
+  
   const {
     category = defaultParams.category,
     priority = defaultParams.priority,
@@ -39,7 +35,7 @@ export default async function Page({ searchParams = {} }: PageProps) {
     page = defaultParams.page,
     sortField = defaultParams.sortField,
     sortOrder = defaultParams.sortOrder,
-  } = params;
+  } = searchParams;
 
   // Convert values with proper typing
   const selectedCategory = (Array.isArray(category) ? category[0] : category) as TodoCategory | 'All';
