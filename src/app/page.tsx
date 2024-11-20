@@ -11,11 +11,13 @@ import { SortFilter, type SortField, type SortOrder } from "@/components/SortFil
 
 const ITEMS_PER_PAGE = 3;
 
+export interface PageProps {
+  searchParams: { [key: string]: string | string[] | undefined };
+}
+
 export default async function Home({
   searchParams,
-}: {
-  searchParams: { [key: string]: string | string[] | undefined };
-}) {
+}: PageProps) {
   const selectedCategory = (searchParams.category as TodoCategory) || 'All';
   const selectedPriority = (searchParams.priority as Priority) || 'All';
   const selectedStatus = (searchParams.status as Status) || 'All';
