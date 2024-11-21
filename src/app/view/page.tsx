@@ -3,7 +3,20 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Todo } from "@/types/todo";
+import { TodoCategory, Priority, Status } from "@prisma/client";
+
+interface Todo {
+  id: string;
+  title: string;
+  content: string | null;
+  category: TodoCategory;
+  priority: Priority;
+  status: Status;
+  dueDate: string | null;
+  url: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 function formatContent(content: string): string {
   if (!content) return '';
@@ -24,6 +37,55 @@ function formatContent(content: string): string {
       }
     }).join('')}
   </div>`;
+}
+
+function getCategoryColor(category: TodoCategory): string {
+  switch (category) {
+    case 'WORK':
+      return 'bg-blue-100 text-blue-800';
+    case 'PERSONAL':
+      return 'bg-purple-100 text-purple-800';
+    case 'SHOPPING':
+      return 'bg-green-100 text-green-800';
+    case 'HEALTH':
+      return 'bg-red-100 text-red-800';
+    case 'EDUCATION':
+      return 'bg-yellow-100 text-yellow-800';
+    case 'OTHER':
+      return 'bg-gray-100 text-gray-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+}
+
+function getPriorityColor(priority: Priority): string {
+  switch (priority) {
+    case 'HIGH':
+      return 'bg-red-100 text-red-800';
+    case 'MEDIUM':
+      return 'bg-yellow-100 text-yellow-800';
+    case 'LOW':
+      return 'bg-green-100 text-green-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+}
+
+function getStatusColor(status: Status): string {
+  switch (status) {
+    case 'NOT_STARTED':
+      return 'bg-gray-100 text-gray-800';
+    case 'IN_PROGRESS':
+      return 'bg-blue-100 text-blue-800';
+    case 'COMPLETED':
+      return 'bg-green-100 text-green-800';
+    case 'CANCELLED':
+      return 'bg-red-100 text-red-800';
+    case 'ON_HOLD':
+      return 'bg-yellow-100 text-yellow-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
 }
 
 function TodoView() {
@@ -109,44 +171,14 @@ function TodoView() {
         <h1 className="text-2xl font-bold mb-4">{todo.title}</h1>
 
         <div className="flex gap-2 mb-4">
-          <span
-            className={`px-2 py-1 text-sm rounded-full ${
-              todo.category === 'Event'
-                ? 'bg-purple-100 text-purple-800'
-                : todo.category === 'Reminder'
-                ? 'bg-yellow-100 text-yellow-800'
-                : todo.category === 'Someday'
-                ? 'bg-green-100 text-green-800'
-                : 'bg-blue-100 text-blue-800'
-            }`}
-          >
-            {todo.category}
+          <span className={`px-2 py-1 text-sm rounded-full ${getCategoryColor(todo.category)}`}>
+            {todo.category.replace(/_/g, ' ')}
           </span>
-          <span
-            className={`px-2 py-1 text-sm rounded-full ${
-              todo.priority === 'High'
-                ? 'bg-red-100 text-red-800'
-                : todo.priority === 'Medium'
-                ? 'bg-orange-100 text-orange-800'
-                : 'bg-green-100 text-green-800'
-            }`}
-          >
-            {todo.priority}
+          <span className={`px-2 py-1 text-sm rounded-full ${getPriorityColor(todo.priority)}`}>
+            {todo.priority.replace(/_/g, ' ')}
           </span>
-          <span
-            className={`px-2 py-1 text-sm rounded-full ${
-              todo.status === 'Active'
-                ? 'bg-blue-100 text-blue-800'
-                : todo.status === 'Pending'
-                ? 'bg-yellow-100 text-yellow-800'
-                : todo.status === 'Complete'
-                ? 'bg-green-100 text-green-800'
-                : todo.status === 'OnHold'
-                ? 'bg-gray-100 text-gray-800'
-                : 'bg-red-100 text-red-800'
-            }`}
-          >
-            {todo.status}
+          <span className={`px-2 py-1 text-sm rounded-full ${getStatusColor(todo.status)}`}>
+            {todo.status.replace(/_/g, ' ')}
           </span>
         </div>
 
@@ -157,10 +189,41 @@ function TodoView() {
           />
         )}
 
-        <div className="text-sm text-gray-500 space-y-1">
-          <div>Created: {new Date(todo.createdAt).toLocaleString()}</div>
+        {todo.url && (
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold mb-2">URL</h2>
+            <a
+              href={todo.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 hover:text-blue-600 hover:underline inline-flex items-center gap-1"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              {todo.url}
+            </a>
+          </div>
+        )}
+
+        {todo.dueDate && (
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold mb-2">Due Date</h2>
+            <p className="text-gray-600">
+              {new Date(todo.dueDate).toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })}
+            </p>
+          </div>
+        )}
+
+        <div className="text-sm text-gray-500 border-t pt-4 mt-4">
+          <p>Created: {new Date(todo.createdAt).toLocaleString()}</p>
           {todo.updatedAt && todo.updatedAt !== todo.createdAt && (
-            <div>Updated: {new Date(todo.updatedAt).toLocaleString()}</div>
+            <p>Updated: {new Date(todo.updatedAt).toLocaleString()}</p>
           )}
         </div>
       </div>

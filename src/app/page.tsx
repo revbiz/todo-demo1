@@ -16,7 +16,6 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-// Default values for parameters
 const defaultParams = {
   category: 'All',
   priority: 'All',
@@ -26,11 +25,14 @@ const defaultParams = {
   sortOrder: 'desc'
 } as const;
 
+interface PageProps {
+  params: { [key: string]: string | string[] };
+  searchParams: { [key: string]: string | string[] | undefined };
+}
+
 export default async function Page({
   searchParams = {}
-}: {
-  searchParams?: { [key: string]: string | string[] | undefined }
-}) {
+}: PageProps) {
   const {
     category = defaultParams.category,
     priority = defaultParams.priority,
@@ -48,6 +50,7 @@ export default async function Page({
   const selectedSortField = (Array.isArray(sortField) ? sortField[0] : sortField) as SortField;
   const selectedSortOrder = (Array.isArray(sortOrder) ? sortOrder[0] : sortOrder) as SortOrder;
   const currentPage = Math.max(1, parseInt(Array.isArray(page) ? page[0] : page, 10));
+  const searchQueryString = Array.isArray(searchQuery) ? searchQuery[0] : searchQuery as string | undefined;
 
   // Get total count for pagination
   const totalCount = await prisma.todo.count({
@@ -62,10 +65,10 @@ export default async function Page({
         selectedStatus === 'All' ? {} : {
           status: selectedStatus as Status
         },
-        searchQuery ? {
+        searchQueryString ? {
           OR: [
-            { title: { contains: searchQuery, mode: 'insensitive' } },
-            { description: { contains: searchQuery, mode: 'insensitive' } }
+            { title: { contains: searchQueryString, mode: 'insensitive' } },
+            { content: { contains: searchQueryString, mode: 'insensitive' } }
           ]
         } : {}
       ]
@@ -87,19 +90,19 @@ export default async function Page({
         selectedStatus === 'All' ? {} : {
           status: selectedStatus as Status
         },
-        searchQuery ? {
+        searchQueryString ? {
           OR: [
-            { title: { contains: searchQuery, mode: 'insensitive' } },
-            { description: { contains: searchQuery, mode: 'insensitive' } }
+            { title: { contains: searchQueryString, mode: 'insensitive' } },
+            { content: { contains: searchQueryString, mode: 'insensitive' } }
           ]
         } : {}
       ]
     },
     orderBy: {
-      createdAt: 'desc'
+      [selectedSortField]: selectedSortOrder
     },
+    skip: (currentPage - 1) * ITEMS_PER_PAGE,
     take: ITEMS_PER_PAGE,
-    skip: (currentPage - 1) * ITEMS_PER_PAGE
   });
 
   // Create a simplified searchParams object for the client

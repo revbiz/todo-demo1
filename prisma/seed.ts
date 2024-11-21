@@ -1,4 +1,4 @@
-import { PrismaClient, TodoCategory } from '@prisma/client';
+import { PrismaClient, TodoCategory, Priority, Status } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -9,25 +9,29 @@ async function main() {
   // Create sample todos
   const sampleTodos = [
     {
-      title: 'Team Meeting',
-      content: 'Discuss project roadmap and upcoming features',
-      category: 'Event' as TodoCategory,
+      title: 'Complete Project Proposal',
+      content: 'Write and submit the project proposal for the new client',
+      category: TodoCategory.WORK,
+      priority: Priority.HIGH,
+      status: Status.NOT_STARTED,
+      url: 'https://example.com/project-docs'
     },
     {
-      title: 'Buy Groceries',
-      content: 'Milk, eggs, bread, and vegetables',
-      category: 'Reminder' as TodoCategory,
+      title: 'Grocery Shopping',
+      content: 'Buy groceries for the week: fruits, vegetables, and milk',
+      category: TodoCategory.SHOPPING,
+      priority: Priority.MEDIUM,
+      status: Status.NOT_STARTED,
+      url: ''
     },
     {
-      title: 'Learn GraphQL',
-      content: 'Study GraphQL basics and implement a sample project',
-      category: 'Someday' as TodoCategory,
-    },
-    {
-      title: 'Fix Navigation Bug',
-      content: 'Debug and fix the navigation issue in the mobile view',
-      category: 'Now' as TodoCategory,
-    },
+      title: 'Exercise',
+      content: '30 minutes of cardio and strength training',
+      category: TodoCategory.PERSONAL,
+      priority: Priority.LOW,
+      status: Status.NOT_STARTED,
+      url: 'https://example.com/workout-plan'
+    }
   ];
 
   for (const todo of sampleTodos) {

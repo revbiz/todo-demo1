@@ -12,34 +12,37 @@ datasource db {
 }
 
 enum TodoCategory {
-  Event
-  Reminder
-  Someday
-  Now
+  WORK
+  PERSONAL
+  SHOPPING
+  HEALTH
+  EDUCATION
+  OTHER
 }
 
 enum Priority {
-  High
-  Medium
-  Low
+  HIGH
+  MEDIUM
+  LOW
 }
 
 enum Status {
-  Active
-  Pending
-  Complete
-  Forget
-  OnHold
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  ON_HOLD
 }
 
 model Todo {
   id          String      @id @default(cuid())
   title       String
-  description String?
+  content     String?     @db.Text
+  description String?     @db.Text
   url         String?     @db.Text
   category    TodoCategory
   priority    Priority
-  status      Status      @default(Active)
+  status      Status      @default(NOT_STARTED)
   dueDate     DateTime?
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt

@@ -140,37 +140,41 @@ function TodoItem({ todo, onDelete, isDeleting }: TodoItemProps) {
           {/* Tags */}
           <div className="flex flex-wrap gap-1.5 mb-2">
             <span className={`px-2 py-0.5 text-xs rounded-full ${
-              todo.category === 'Event'
-                ? 'bg-purple-100 text-purple-800'
-                : todo.category === 'Reminder'
-                ? 'bg-yellow-100 text-yellow-800'
-                : todo.category === 'Someday'
+              todo.category === 'WORK'
+                ? 'bg-blue-100 text-blue-800'
+                : todo.category === 'PERSONAL'
                 ? 'bg-green-100 text-green-800'
-                : 'bg-blue-100 text-blue-800'
+                : todo.category === 'SHOPPING'
+                ? 'bg-yellow-100 text-yellow-800'
+                : todo.category === 'HEALTH'
+                ? 'bg-red-100 text-red-800'
+                : todo.category === 'EDUCATION'
+                ? 'bg-purple-100 text-purple-800'
+                : 'bg-gray-100 text-gray-800'
             }`}>
-              {todo.category}
+              {todo.category.toLowerCase().replace('_', ' ')}
             </span>
             <span className={`px-2 py-0.5 text-xs rounded-full ${
-              todo.priority === 'High'
+              todo.priority === 'HIGH'
                 ? 'bg-red-100 text-red-800'
-                : todo.priority === 'Medium'
-                ? 'bg-orange-100 text-orange-800'
+                : todo.priority === 'MEDIUM'
+                ? 'bg-yellow-100 text-yellow-800'
                 : 'bg-green-100 text-green-800'
             }`}>
-              {todo.priority}
+              {todo.priority.toLowerCase()}
             </span>
             <span className={`px-2 py-0.5 text-xs rounded-full ${
-              todo.status === 'Active'
-                ? 'bg-blue-100 text-blue-800'
-                : todo.status === 'Pending'
-                ? 'bg-yellow-100 text-yellow-800'
-                : todo.status === 'Complete'
+              todo.status === 'COMPLETED'
                 ? 'bg-green-100 text-green-800'
-                : todo.status === 'OnHold'
+                : todo.status === 'IN_PROGRESS'
+                ? 'bg-blue-100 text-blue-800'
+                : todo.status === 'NOT_STARTED'
                 ? 'bg-gray-100 text-gray-800'
-                : 'bg-red-100 text-red-800'
+                : todo.status === 'CANCELLED'
+                ? 'bg-red-100 text-red-800'
+                : 'bg-yellow-100 text-yellow-800'
             }`}>
-              {todo.status}
+              {todo.status.toLowerCase().replace('_', ' ')}
             </span>
             {todo.dueDate && (
               <span className="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-800">

@@ -9,14 +9,14 @@ import { RichTextContent } from '@/components/RichTextContent';
 interface Todo {
   id: string;
   title: string;
-  description: string | null;
+  content: string | null;
   category: TodoCategory;
   priority: Priority;
   status: Status;
   dueDate: string | null;
   url: string | null;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface ViewPageProps {
@@ -25,7 +25,7 @@ interface ViewPageProps {
   };
 }
 
-function formatDate(date: Date): string {
+function formatDate(date: string): string {
   return new Date(date).toLocaleString('en-US', {
     month: '2-digit',
     day: '2-digit',
@@ -44,6 +44,61 @@ function formatDueDate(date: string): string {
   });
 }
 
+function getCategoryColor(category: TodoCategory): string {
+  switch (category) {
+    case TodoCategory.WORK:
+      return 'bg-blue-100 text-blue-800';
+    case TodoCategory.PERSONAL:
+      return 'bg-green-100 text-green-800';
+    case TodoCategory.SHOPPING:
+      return 'bg-purple-100 text-purple-800';
+    case TodoCategory.HEALTH:
+      return 'bg-red-100 text-red-800';
+    case TodoCategory.EDUCATION:
+      return 'bg-yellow-100 text-yellow-800';
+    case TodoCategory.OTHER:
+      return 'bg-gray-100 text-gray-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+}
+
+function getPriorityColor(priority: Priority): string {
+  switch (priority) {
+    case Priority.HIGH:
+      return 'bg-red-100 text-red-800';
+    case Priority.MEDIUM:
+      return 'bg-yellow-100 text-yellow-800';
+    case Priority.LOW:
+      return 'bg-green-100 text-green-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+}
+
+function getStatusColor(status: Status): string {
+  switch (status) {
+    case Status.NOT_STARTED:
+      return 'bg-gray-100 text-gray-800';
+    case Status.IN_PROGRESS:
+      return 'bg-blue-100 text-blue-800';
+    case Status.COMPLETED:
+      return 'bg-green-100 text-green-800';
+    case Status.CANCELLED:
+      return 'bg-red-100 text-red-800';
+    case Status.ON_HOLD:
+      return 'bg-yellow-100 text-yellow-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+}
+
+function formatEnumValue(value: string): string {
+  return value.split('_').map(word => 
+    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+  ).join(' ');
+}
+
 export default function ViewTodo({
   params,
 }: ViewPageProps) {
@@ -60,7 +115,7 @@ export default function ViewTodo({
         if (!response.ok) {
           throw new Error('Failed to fetch todo');
         }
-        const data: Todo = await response.json();
+        const data = await response.json();
         setTodo(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
@@ -71,6 +126,27 @@ export default function ViewTodo({
 
     fetchTodo();
   }, [todoId]);
+
+  const handleDelete = async () => {
+    if (!todo || !confirm('Are you sure you want to delete this todo?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/todos/${todo.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete todo');
+      }
+
+      router.push('/');
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete todo');
+    }
+  };
 
   if (loading) {
     return (
@@ -108,7 +184,7 @@ export default function ViewTodo({
   if (!todo) {
     return (
       <div className="max-w-4xl mx-auto p-4">
-        <div className="bg-red-100 text-red-700 p-4 rounded-md">
+        <div className="bg-yellow-100 text-yellow-700 p-4 rounded-md">
           Todo not found
         </div>
         <div className="mt-4">
@@ -125,32 +201,37 @@ export default function ViewTodo({
 
   return (
     <div className="max-w-4xl mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
+      <div className="mb-6 flex justify-between items-center">
         <Link
           href="/"
           className="text-blue-500 hover:text-blue-700"
         >
           ← Back to Todos
         </Link>
-        <Link
-          href={`/edit/${todo.id}`}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-        >
-          Edit Todo
-        </Link>
+        <div className="space-x-2">
+          <Link
+            href={`/edit/${todo.id}`}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+          >
+            Edit
+          </Link>
+          <button
+            onClick={handleDelete}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700"
+          >
+            Delete
+          </button>
+        </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <RichTextContent 
-          content={todo.title} 
-          className="text-2xl font-bold mb-4"
-        />
+      <div className="bg-white shadow rounded-lg p-6">
+        <h1 className="text-2xl font-bold mb-4">{todo.title}</h1>
 
-        {/* Description */}
-        {todo.description && (
+        {/* Content */}
+        {todo.content && (
           <div className="mb-6">
-            <h2 className="text-lg font-semibold mb-2">Description</h2>
-            <RichTextContent content={todo.description} className="prose max-w-none" />
+            <h2 className="text-lg font-semibold mb-2">Content</h2>
+            <RichTextContent content={todo.content} className="prose max-w-none" />
           </div>
         )}
 
@@ -174,65 +255,31 @@ export default function ViewTodo({
 
         {/* Metadata Section */}
         <div className="flex flex-wrap gap-2 mb-6">
-          <span
-            className={`px-2 py-1 text-sm rounded-full ${
-              todo.category === 'Event'
-                ? 'bg-purple-100 text-purple-800'
-                : todo.category === 'Reminder'
-                ? 'bg-yellow-100 text-yellow-800'
-                : todo.category === 'Someday'
-                ? 'bg-green-100 text-green-800'
-                : 'bg-blue-100 text-blue-800'
-            }`}
-          >
-            {todo.category}
+          <span className={`px-2 py-1 text-sm rounded-full ${getCategoryColor(todo.category)}`}>
+            {formatEnumValue(todo.category)}
           </span>
-          <span
-            className={`px-2 py-1 text-sm rounded-full ${
-              todo.priority === 'High'
-                ? 'bg-red-100 text-red-800'
-                : todo.priority === 'Medium'
-                ? 'bg-orange-100 text-orange-800'
-                : 'bg-green-100 text-green-800'
-            }`}
-          >
-            {todo.priority}
+          <span className={`px-2 py-1 text-sm rounded-full ${getPriorityColor(todo.priority)}`}>
+            {formatEnumValue(todo.priority)}
           </span>
-          <span
-            className={`px-2 py-1 text-sm rounded-full ${
-              todo.status === 'Active'
-                ? 'bg-blue-100 text-blue-800'
-                : todo.status === 'Pending'
-                ? 'bg-yellow-100 text-yellow-800'
-                : todo.status === 'Complete'
-                ? 'bg-green-100 text-green-800'
-                : todo.status === 'OnHold'
-                ? 'bg-gray-100 text-gray-800'
-                : 'bg-red-100 text-red-800'
-            }`}
-          >
-            {todo.status}
+          <span className={`px-2 py-1 text-sm rounded-full ${getStatusColor(todo.status)}`}>
+            {formatEnumValue(todo.status)}
           </span>
         </div>
 
-        {/* Due Date Section */}
+        {/* Due Date */}
         {todo.dueDate && (
           <div className="mb-6">
-            <h2 className="text-sm font-medium text-gray-700 mb-1">Due Date</h2>
-            <p className="text-gray-900">
+            <h2 className="text-lg font-semibold mb-2">Due Date</h2>
+            <p className="text-gray-600">
               {formatDueDate(todo.dueDate)}
             </p>
           </div>
         )}
 
-        {/* Timestamps Section */}
-        <div className="border-t pt-4 mt-6">
-          <div className="text-sm text-gray-500 space-y-1">
-            <div>Created: {formatDate(new Date(todo.createdAt))}</div>
-            {todo.updatedAt && todo.updatedAt !== todo.createdAt && (
-              <div>Updated: {formatDate(new Date(todo.updatedAt))}</div>
-            )}
-          </div>
+        {/* Created/Updated Info */}
+        <div className="text-sm text-gray-500 border-t pt-4 mt-4">
+          <p>Created: {formatDate(todo.createdAt)}</p>
+          <p>Last Updated: {formatDate(todo.updatedAt)}</p>
         </div>
       </div>
     </div>

@@ -34,6 +34,18 @@ export function TodoPage({
   searchParams,
   children
 }: TodoPageProps) {
+  const handleCategoryChange = (category: TodoCategory | 'All') => {
+    // Category change is handled by the component itself
+  };
+
+  const handlePriorityChange = (priority: Priority | 'All') => {
+    // Priority change is handled by the component itself
+  };
+
+  const handleStatusChange = (status: Status | 'All') => {
+    // Status change is handled by the component itself
+  };
+
   return (
     <main className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
@@ -51,15 +63,15 @@ export function TodoPage({
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <div>
               <h2 className="text-sm font-medium text-gray-700 mb-2">Category</h2>
-              <CategoryFilter selectedCategory={selectedCategory} />
+              <CategoryFilter onCategoryChange={handleCategoryChange} selectedCategory={selectedCategory} />
             </div>
             <div>
               <h2 className="text-sm font-medium text-gray-700 mb-2">Priority</h2>
-              <PriorityFilter selectedPriority={selectedPriority} />
+              <PriorityFilter onPriorityChange={handlePriorityChange} selectedPriority={selectedPriority} />
             </div>
             <div>
               <h2 className="text-sm font-medium text-gray-700 mb-2">Status</h2>
-              <StatusFilter selectedStatus={selectedStatus} />
+              <StatusFilter onStatusChange={handleStatusChange} selectedStatus={selectedStatus} />
             </div>
             <div>
               <h2 className="text-sm font-medium text-gray-700 mb-2">Sort By</h2>
