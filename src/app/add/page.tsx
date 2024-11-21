@@ -107,25 +107,25 @@ export default function AddTodo() {
         </div>
       )}
 
-      <div>
+      <div className="space-y-2">
         <label htmlFor="title" className="block text-sm font-medium text-gray-700">
           Title
         </label>
         <RichTextEditor
           initialContent={title}
-          onUpdate={setTitle}
-          placeholder="Enter todo title"
+          onUpdate={(newContent) => setTitle(newContent)}
+          placeholder="Enter todo title..."
         />
       </div>
 
-      <div>
+      <div className="space-y-2">
         <label htmlFor="content" className="block text-sm font-medium text-gray-700">
           Content
         </label>
         <RichTextEditor
           initialContent={content}
-          onUpdate={setContent}
-          placeholder="Enter todo content"
+          onUpdate={(newContent) => setContent(newContent)}
+          placeholder="Enter todo content..."
         />
       </div>
 
