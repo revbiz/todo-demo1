@@ -1,5 +1,0 @@
-{
-  "/add/page": "app/add/page.js",
-  "/api/todos/route": "app/api/todos/route.js",
-  "/page": "app/page.js"
-}
