@@ -238,19 +238,34 @@ export default function ViewTodo({
 
         {/* URL */}
         {todo.url && (
-          <div className="mb-6">
-            <h2 className="text-lg font-semibold mb-2">URL</h2>
-            <a
-              href={todo.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-500 hover:text-blue-600 hover:underline inline-flex items-center gap-1"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          <div className="mb-6 bg-gray-50 p-4 rounded-lg">
+            <h2 className="text-lg font-semibold mb-2 flex items-center gap-2">
+              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
               </svg>
-              {todo.url}
-            </a>
+              Related Link
+            </h2>
+            <div className="flex items-center gap-2">
+              <a
+                href={todo.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 hover:underline break-all"
+              >
+                {todo.url}
+              </a>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(todo.url || '');
+                }}
+                className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-full transition-colors"
+                title="Copy URL"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+              </button>
+            </div>
           </div>
         )}
 
