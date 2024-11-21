@@ -225,12 +225,13 @@ export default function ViewTodo({
       </div>
 
       <div className="bg-white shadow rounded-lg p-6">
-        <h1 className="text-2xl font-bold mb-4">{todo.title}</h1>
+        <div className="mb-6">
+          <RichTextContent content={todo.title} className="text-2xl font-bold leading-normal" />
+        </div>
 
         {/* Content */}
         {todo.content && (
           <div className="mb-6">
-            <h2 className="text-lg font-semibold mb-2">Content</h2>
             <RichTextContent content={todo.content} className="prose max-w-none" />
           </div>
         )}
