@@ -4,8 +4,7 @@ import { Priority } from '@prisma/client';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 interface PriorityFilterProps {
-  onPriorityChange?: (priority: Priority | 'All') => void;
-  selectedPriority?: Priority | 'All';
+  selected?: Priority | 'All';
 }
 
 const PRIORITIES: (Priority | 'All')[] = ['All', 'HIGH', 'MEDIUM', 'LOW'];
@@ -19,28 +18,24 @@ const getPriorityStyle = (priority: Priority | 'All') => {
     case 'LOW':
       return 'bg-green-100 text-green-800 hover:bg-green-200';
     case 'All':
-      return 'bg-white text-gray-800 hover:bg-gray-100';
+      return 'bg-gray-100 text-gray-800 hover:bg-gray-200';
     default:
       return 'bg-gray-100 text-gray-800 hover:bg-gray-200';
   }
 };
 
-export function PriorityFilter({ onPriorityChange, selectedPriority = 'All' }: PriorityFilterProps) {
+export function PriorityFilter({ selected = 'All' }: PriorityFilterProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const handlePriorityChange = (priority: Priority | 'All') => {
-    const category = searchParams.get('category') || 'All';
+    const params = new URLSearchParams(searchParams.toString());
     if (priority === 'All') {
-      if (category === 'All') {
-        router.push('/');
-      } else {
-        router.push(`/?category=${category}`);
-      }
+      params.delete('priority');
     } else {
-      router.push(`/?priority=${priority}${category !== 'All' ? `&category=${category}` : ''}`);
+      params.set('priority', priority);
     }
-    if (onPriorityChange) onPriorityChange(priority);
+    router.push(`/?${params.toString()}`);
   };
 
   return (
@@ -49,11 +44,11 @@ export function PriorityFilter({ onPriorityChange, selectedPriority = 'All' }: P
         <button
           key={priority}
           onClick={() => handlePriorityChange(priority)}
-          className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${getPriorityStyle(priority)} ${
-            selectedPriority === priority ? 'ring-2 ring-offset-2 ring-blue-500' : ''
-          }`}
+          className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+            getPriorityStyle(priority)
+          } ${selected === priority ? 'ring-2 ring-offset-2 ring-gray-500' : ''}`}
         >
-          {priority === 'All' ? 'All' : priority}
+          {priority === 'All' ? 'All Priorities' : priority.toLowerCase()}
         </button>
       ))}
     </div>

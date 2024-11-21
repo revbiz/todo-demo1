@@ -121,8 +121,6 @@ export default async function Page({
       <Pagination
         currentPage={currentPage}
         totalPages={totalPages}
-        baseUrl="/"
-        searchParams={searchParams}
       />
     </div>
   );

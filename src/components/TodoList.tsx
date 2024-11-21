@@ -1,6 +1,7 @@
 "use client";
 
-import { TodoCategory, Priority, Status, Todo } from "@/types/todo";
+import { TodoCategory, Priority, Todo } from "@/types/todo";
+import { Status } from '@prisma/client';
 import RichTextContent from "./RichTextContent";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -181,18 +182,20 @@ function TodoItem({ todo, onDelete, isDeleting }: TodoItemProps) {
             </span>
             <span
               className={`px-2 py-0.5 text-xs rounded-full ${
-                todo.status === "COMPLETED"
+                todo.status === Status.COMPLETE
                   ? "bg-green-100 text-green-800"
-                  : todo.status === "IN_PROGRESS"
+                  : todo.status === Status.ACTIVE
                   ? "bg-blue-100 text-blue-800"
-                  : todo.status === "NOT_STARTED"
-                  ? "bg-gray-100 text-gray-800"
-                  : todo.status === "CANCELLED"
+                  : todo.status === Status.PENDING
+                  ? "bg-yellow-100 text-yellow-800"
+                  : todo.status === Status.HOLD
+                  ? "bg-orange-100 text-orange-800"
+                  : todo.status === Status.SKIP
                   ? "bg-red-100 text-red-800"
-                  : "bg-yellow-100 text-yellow-800"
+                  : "bg-gray-100 text-gray-800"
               }`}
             >
-              {todo.status.toLowerCase().replace("_", " ")}
+              {todo.status}
             </span>
             {todo.dueDate && (
               <span className="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-800">
@@ -226,8 +229,10 @@ function TodoItem({ todo, onDelete, isDeleting }: TodoItemProps) {
                 rel="noopener noreferrer"
                 onClick={(e) => {
                   e.preventDefault();
-                  const urlToOpen = todo.url.trim();
-                  window.open(urlToOpen, '_blank', 'noopener,noreferrer');
+                  if (todo.url) {
+                    const urlToOpen = todo.url.trim();
+                    window.open(urlToOpen, '_blank', 'noopener,noreferrer');
+                  }
                 }}
                 className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 hover:underline"
               >
@@ -387,7 +392,7 @@ export function TodoList({
         comparison = (priorityOrder[a.priority] || 0) - (priorityOrder[b.priority] || 0);
         break;
       case 'status':
-        const statusOrder = { ACTIVE: 0, PENDING: 1, HOLD: 2, SKIP: 3, COMPLETE: 4 };
+        const statusOrder = { COMPLETE: 0, ACTIVE: 1, PENDING: 2, HOLD: 3, SKIP: 4 };
         comparison = (statusOrder[a.status] || 0) - (statusOrder[b.status] || 0);
         break;
     }

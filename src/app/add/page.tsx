@@ -13,18 +13,18 @@ export default function AddTodo() {
     content: "",
     description: "",
     url: "",
-    category: TodoCategory.PERSONAL,
-    priority: Priority.LOW,
-    status: Status.PENDING,
-    dueDate: null
+    category: TodoCategory.PERSONAL as TodoCategory,
+    priority: Priority.LOW as Priority,
+    status: Status.PENDING as Status,
+    dueDate: ""
   };
 
-  const [category, setCategory] = useState(defaultValues.category);
-  const [priority, setPriority] = useState(defaultValues.priority);
-  const [status, setStatus] = useState(defaultValues.status);
+  const [category, setCategory] = useState<TodoCategory>(defaultValues.category);
+  const [priority, setPriority] = useState<Priority>(defaultValues.priority);
+  const [status, setStatus] = useState<Status>(defaultValues.status);
   const [title, setTitle] = useState(defaultValues.title);
   const [content, setContent] = useState(defaultValues.content);
-  const [dueDate, setDueDate] = useState(defaultValues.dueDate);
+  const [dueDate, setDueDate] = useState<string>(defaultValues.dueDate);
   const [url, setUrl] = useState(defaultValues.url);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -47,7 +47,7 @@ export default function AddTodo() {
         category,
         priority,
         status,
-        dueDate: dueDate || null,
+        dueDate: dueDate ? new Date(dueDate).toISOString() : null,
         url: url.trim() || null,
       };
 

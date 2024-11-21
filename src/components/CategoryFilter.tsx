@@ -4,8 +4,7 @@ import { TodoCategory } from '@prisma/client';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 interface CategoryFilterProps {
-  onCategoryChange?: (category: TodoCategory | 'All') => void;
-  selectedCategory?: TodoCategory | 'All';
+  selected?: TodoCategory | 'All';
 }
 
 const CATEGORIES: (TodoCategory | 'All')[] = ['All', 'WORK', 'PERSONAL', 'SHOPPING', 'HEALTH', 'EDUCATION', 'OTHER'];
@@ -19,38 +18,32 @@ const getCategoryColor = (category: TodoCategory | 'All') => {
     case 'SHOPPING':
       return 'bg-yellow-200 hover:bg-yellow-300';
     case 'HEALTH':
-      return 'bg-red-200 hover:bg-red-300';
-    case 'EDUCATION':
       return 'bg-purple-200 hover:bg-purple-300';
+    case 'EDUCATION':
+      return 'bg-indigo-200 hover:bg-indigo-300';
     case 'OTHER':
       return 'bg-gray-200 hover:bg-gray-300';
     default:
-      return 'bg-white hover:bg-gray-100';
+      return 'bg-gray-100 hover:bg-gray-200';
   }
 };
 
-const getCategoryText = (category: TodoCategory | 'All') => {
-  if (category === 'All') return 'All';
-  return category.toLowerCase().replace('_', ' ');
+const getCategoryText = (category: TodoCategory | 'All'): string => {
+  return category === 'All' ? 'All Categories' : category.toLowerCase();
 };
 
-export function CategoryFilter({ onCategoryChange, selectedCategory = 'All' }: CategoryFilterProps) {
+export function CategoryFilter({ selected = 'All' }: CategoryFilterProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const handleCategoryChange = (category: TodoCategory | 'All') => {
-    const status = searchParams.get('status') || 'All';
-    const priority = searchParams.get('priority') || 'All';
-    const query = searchParams.get('q') || '';
-
-    const params = new URLSearchParams();
-    if (category !== 'All') params.set('category', category);
-    if (status !== 'All') params.set('status', status);
-    if (priority !== 'All') params.set('priority', priority);
-    if (query) params.set('q', query);
-
+    const params = new URLSearchParams(searchParams.toString());
+    if (category === 'All') {
+      params.delete('category');
+    } else {
+      params.set('category', category);
+    }
     router.push(`/?${params.toString()}`);
-    if (onCategoryChange) onCategoryChange(category);
   };
 
   return (
@@ -59,9 +52,9 @@ export function CategoryFilter({ onCategoryChange, selectedCategory = 'All' }: C
         <button
           key={category}
           onClick={() => handleCategoryChange(category)}
-          className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${getCategoryColor(category)} ${
-            selectedCategory === category ? 'ring-2 ring-offset-2 ring-blue-500' : ''
-          }`}
+          className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+            getCategoryColor(category)
+          } ${selected === category ? 'ring-2 ring-offset-2 ring-gray-500' : ''}`}
         >
           {getCategoryText(category)}
         </button>

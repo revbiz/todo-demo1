@@ -73,16 +73,16 @@ function getPriorityColor(priority: Priority): string {
 
 function getStatusColor(status: Status): string {
   switch (status) {
-    case 'NOT_STARTED':
-      return 'bg-gray-100 text-gray-800';
-    case 'IN_PROGRESS':
+    case Status.ACTIVE:
       return 'bg-blue-100 text-blue-800';
-    case 'COMPLETED':
+    case Status.COMPLETE:
       return 'bg-green-100 text-green-800';
-    case 'CANCELLED':
-      return 'bg-red-100 text-red-800';
-    case 'ON_HOLD':
+    case Status.PENDING:
       return 'bg-yellow-100 text-yellow-800';
+    case Status.HOLD:
+      return 'bg-orange-100 text-orange-800';
+    case Status.SKIP:
+      return 'bg-red-100 text-red-800';
     default:
       return 'bg-gray-100 text-gray-800';
   }

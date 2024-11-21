@@ -158,7 +158,6 @@ export default function EditPage({ params }: EditPageProps) {
             initialContent={title}
             onUpdate={setTitle}
             placeholder="Enter todo title..."
-            minHeight="2.5rem"
           />
         </div>
 
@@ -173,7 +172,6 @@ export default function EditPage({ params }: EditPageProps) {
             initialContent={content}
             onUpdate={setContent}
             placeholder="Enter todo content..."
-            minHeight="10rem"
           />
         </div>
 
