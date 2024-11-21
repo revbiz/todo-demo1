@@ -11,7 +11,7 @@ interface StatusFilterProps {
 export function StatusFilter({ onStatusChange, selectedStatus = 'All' }: StatusFilterProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const statuses: (Status | 'All')[] = ['All', 'NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'ON_HOLD'];
+  const statuses: (Status | 'All')[] = ['All', 'ACTIVE', 'COMPLETE', 'PENDING', 'HOLD', 'SKIP'];
 
   const handleStatusChange = (status: Status | 'All') => {
     const category = searchParams.get('category') || 'All';
@@ -30,16 +30,16 @@ export function StatusFilter({ onStatusChange, selectedStatus = 'All' }: StatusF
 
   const getStatusColor = (status: Status | 'All') => {
     switch (status) {
-      case 'NOT_STARTED':
-        return 'bg-gray-200 hover:bg-gray-300';
-      case 'IN_PROGRESS':
+      case 'ACTIVE':
         return 'bg-blue-200 hover:bg-blue-300';
-      case 'COMPLETED':
+      case 'COMPLETE':
         return 'bg-green-200 hover:bg-green-300';
-      case 'CANCELLED':
-        return 'bg-red-200 hover:bg-red-300';
-      case 'ON_HOLD':
+      case 'PENDING':
         return 'bg-yellow-200 hover:bg-yellow-300';
+      case 'HOLD':
+        return 'bg-orange-200 hover:bg-orange-300';
+      case 'SKIP':
+        return 'bg-red-200 hover:bg-red-300';
       default:
         return 'bg-white hover:bg-gray-100';
     }
@@ -47,16 +47,16 @@ export function StatusFilter({ onStatusChange, selectedStatus = 'All' }: StatusF
 
   const getStatusText = (status: Status | 'All') => {
     switch (status) {
-      case 'NOT_STARTED':
-        return 'Not Started';
-      case 'IN_PROGRESS':
-        return 'In Progress';
-      case 'COMPLETED':
-        return 'Completed';
-      case 'CANCELLED':
-        return 'Cancelled';
-      case 'ON_HOLD':
-        return 'On Hold';
+      case 'ACTIVE':
+        return 'Active';
+      case 'COMPLETE':
+        return 'Complete';
+      case 'PENDING':
+        return 'Pending';
+      case 'HOLD':
+        return 'Hold';
+      case 'SKIP':
+        return 'Skip';
       default:
         return 'All';
     }
@@ -68,7 +68,7 @@ export function StatusFilter({ onStatusChange, selectedStatus = 'All' }: StatusF
         <button
           key={status}
           onClick={() => handleStatusChange(status)}
-          className={`px-3 py-1 rounded-full text-sm font-medium ${
+          className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
             getStatusColor(status)
           } ${selectedStatus === status ? 'ring-2 ring-offset-2 ring-blue-500' : ''}`}
         >

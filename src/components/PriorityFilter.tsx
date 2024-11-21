@@ -44,7 +44,7 @@ export function PriorityFilter({ onPriorityChange, selectedPriority = 'All' }: P
   };
 
   return (
-    <div className="flex flex-wrap gap-2 mb-4">
+    <div className="flex flex-wrap gap-2">
       {PRIORITIES.map((priority) => (
         <button
           key={priority}
@@ -53,7 +53,7 @@ export function PriorityFilter({ onPriorityChange, selectedPriority = 'All' }: P
             selectedPriority === priority ? 'ring-2 ring-offset-2 ring-blue-500' : ''
           }`}
         >
-          {priority === 'All' ? 'All' : priority.replace(/_/g, ' ')}
+          {priority === 'All' ? 'All' : priority}
         </button>
       ))}
     </div>

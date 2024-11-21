@@ -13,7 +13,7 @@ async function main() {
       content: 'Write and submit the project proposal for the new client',
       category: TodoCategory.WORK,
       priority: Priority.HIGH,
-      status: Status.NOT_STARTED,
+      status: Status.PENDING,
       url: 'https://example.com/project-docs'
     },
     {
@@ -21,7 +21,7 @@ async function main() {
       content: 'Buy groceries for the week: fruits, vegetables, and milk',
       category: TodoCategory.SHOPPING,
       priority: Priority.MEDIUM,
-      status: Status.NOT_STARTED,
+      status: Status.PENDING,
       url: ''
     },
     {
@@ -29,7 +29,7 @@ async function main() {
       content: '30 minutes of cardio and strength training',
       category: TodoCategory.PERSONAL,
       priority: Priority.LOW,
-      status: Status.NOT_STARTED,
+      status: Status.PENDING,
       url: 'https://example.com/workout-plan'
     }
   ];

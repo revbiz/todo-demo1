@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { TodoCategory, Priority, Status } from "@prisma/client";
-import { RichTextContent } from '@/components/RichTextContent';
+import RichTextContent from '@/components/RichTextContent';
 
 interface Todo {
   id: string;

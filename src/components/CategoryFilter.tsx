@@ -54,12 +54,12 @@ export function CategoryFilter({ onCategoryChange, selectedCategory = 'All' }: C
   };
 
   return (
-    <div className="flex flex-wrap gap-2 mb-4">
+    <div className="flex flex-wrap gap-2">
       {CATEGORIES.map((category) => (
         <button
           key={category}
           onClick={() => handleCategoryChange(category)}
-          className={`px-3 py-1.5 rounded-full text-sm font-medium ${getCategoryColor(category)} ${
+          className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${getCategoryColor(category)} ${
             selectedCategory === category ? 'ring-2 ring-offset-2 ring-blue-500' : ''
           }`}
         >

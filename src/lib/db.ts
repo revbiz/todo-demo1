@@ -49,12 +49,14 @@ export async function createTodo({
   category,
   priority,
   dueDate,
+  url,
 }: {
   title: string;
-  content: string;
+  content?: string;
   category: TodoCategory;
   priority: Priority;
   dueDate?: string | null;
+  url?: string | null;
 }) {
   try {
     const todo = await prisma.todo.create({
@@ -63,8 +65,9 @@ export async function createTodo({
         content,
         category,
         priority,
-        status: 'NOT_STARTED' as Status,
+        status: Status.PENDING,
         dueDate: dueDate ? new Date(dueDate) : null,
+        url: url || null,
       },
     });
     revalidatePath('/');
@@ -82,6 +85,7 @@ export async function updateTodo(id: string, data: {
   priority?: Priority;
   status?: Status;
   dueDate?: string | null;
+  url?: string | null;
 }) {
   try {
     const todo = await prisma.todo.update({
@@ -89,9 +93,15 @@ export async function updateTodo(id: string, data: {
       data: {
         ...data,
         dueDate: data.dueDate ? new Date(data.dueDate) : null,
+        url: data.url?.trim() || null,
       },
     });
+    
+    // Revalidate both the home page and the specific todo page
     revalidatePath('/');
+    revalidatePath('/view/[id]');
+    revalidatePath(`/view/${id}`);
+    
     return todo;
   } catch (error) {
     console.error('Error updating todo:', error);

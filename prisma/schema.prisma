@@ -27,11 +27,11 @@ enum Priority {
 }
 
 enum Status {
-  NOT_STARTED
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
-  ON_HOLD
+  ACTIVE
+  COMPLETE
+  PENDING
+  HOLD
+  SKIP
 }
 
 model Todo {
@@ -42,7 +42,7 @@ model Todo {
   url         String?     @db.Text
   category    TodoCategory
   priority    Priority
-  status      Status      @default(NOT_STARTED)
+  status      Status      @default(PENDING)
   dueDate     DateTime?
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt

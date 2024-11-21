@@ -1,50 +1,82 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import DOMPurify from 'isomorphic-dompurify';
+import TextStyle from '@tiptap/extension-text-style';
+import Color from '@tiptap/extension-color';
+import { EditorContent, useEditor } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import { Extension } from '@tiptap/core';
+
+const FontSize = Extension.create({
+  name: 'fontSize',
+  addOptions() {
+    return {
+      types: ['textStyle'],
+    }
+  },
+  addGlobalAttributes() {
+    return [
+      {
+        types: this.options.types,
+        attributes: {
+          fontSize: {
+            default: null,
+            parseHTML: element => element.style.fontSize?.replace('px', ''),
+            renderHTML: attributes => {
+              if (!attributes.fontSize) return {}
+              return {
+                style: `font-size: ${attributes.fontSize}px`,
+              }
+            },
+          },
+        },
+      },
+    ]
+  },
+});
 
 interface RichTextContentProps {
   content: string;
   className?: string;
 }
 
-export function RichTextContent({ content, className = '' }: RichTextContentProps) {
-  // Process content to ensure proper spacing and formatting
-  const processContent = (htmlContent: string): string => {
-    if (!htmlContent) return '';
-    
-    let processed = htmlContent;
-    
-    // Remove any existing classes
-    processed = processed.replace(/class="[^"]*"/g, '');
-    
-    // Clean the HTML content
-    processed = DOMPurify.sanitize(processed);
-    
-    // Remove empty paragraphs
-    processed = processed.replace(/<p>\s*<\/p>/g, '');
-    
-    // Add proper spacing for paragraphs
-    if (className.includes('text-2xl')) {
-      // For titles, use smaller margins
-      processed = processed.replace(/<p>/g, '<p class="mb-2 last:mb-0">');
-    } else {
-      // For content, use regular margins
-      processed = processed.replace(/<p>/g, '<p class="mb-4 last:mb-0">');
-      
-      // Add proper spacing for lists
-      processed = processed.replace(/<ul>/g, '<ul class="list-disc ml-4 space-y-2 mb-4">');
-      processed = processed.replace(/<ol>/g, '<ol class="list-decimal ml-4 space-y-2 mb-4">');
-      processed = processed.replace(/<li>/g, '<li class="mb-1">');
+const RichTextContent = ({ content, className = '' }: RichTextContentProps) => {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        history: false,
+      }),
+      TextStyle,
+      Color,
+      FontSize,
+    ],
+    content: DOMPurify.sanitize(content),
+    editable: false,
+    immediatelyRender: false,
+  });
+
+  useEffect(() => {
+    if (editor && content) {
+      editor.commands.setContent(DOMPurify.sanitize(content));
     }
-    
-    return processed;
-  };
+  }, [content, editor]);
+
+  if (!mounted || !editor) {
+    return <div className={`${className} min-h-[1.5rem]`} />;
+  }
 
   return (
-    <div
-      className={`${className}`}
-      dangerouslySetInnerHTML={{ __html: processContent(content) }}
-    />
+    <div className={className}>
+      <EditorContent editor={editor} />
+    </div>
   );
-}
+};
+
+export default RichTextContent;

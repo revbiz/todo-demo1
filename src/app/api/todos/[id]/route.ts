@@ -31,7 +31,7 @@ export async function PUT(
 ) {
   try {
     const body = await request.json();
-    const { title, content, category, priority, status, dueDate } = body;
+    const { title, content, category, priority, status, dueDate, url } = body;
 
     const todo = await updateTodo(params.id, {
       title,
@@ -40,6 +40,7 @@ export async function PUT(
       priority: priority as Priority,
       status: status as Status,
       dueDate: dueDate ? dueDate : null,
+      url: url || null,
     });
 
     return NextResponse.json(todo);

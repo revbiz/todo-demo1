@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -29,9 +29,7 @@ const CATEGORIES = Object.values(TodoCategory);
 const PRIORITIES = Object.values(Priority);
 const STATUSES = Object.values(Status);
 
-export default function EditPage({
-  params,
-}: EditPageProps) {
+export default function EditPage({ params }: EditPageProps) {
   const router = useRouter();
   const todoId = params.id;
   const [loading, setLoading] = useState(true);
@@ -39,9 +37,9 @@ export default function EditPage({
   const [todo, setTodo] = useState<Todo | null>(null);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [category, setCategory] = useState<TodoCategory>(TodoCategory.WORK);
-  const [priority, setPriority] = useState<Priority>(Priority.MEDIUM);
-  const [status, setStatus] = useState<Status>(Status.NOT_STARTED);
+  const [category, setCategory] = useState<TodoCategory>(TodoCategory.PERSONAL);
+  const [priority, setPriority] = useState<Priority>(Priority.LOW);
+  const [status, setStatus] = useState<Status>(Status.PENDING);
   const [dueDate, setDueDate] = useState("");
   const [url, setUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -51,11 +49,11 @@ export default function EditPage({
       try {
         const response = await fetch(`/api/todos/${todoId}`);
         if (!response.ok) {
-          throw new Error('Failed to fetch todo');
+          throw new Error("Failed to fetch todo");
         }
         const data = await response.json();
         if (!data) {
-          throw new Error('Todo not found');
+          throw new Error("Todo not found");
         }
         setTodo(data);
         setTitle(data.title);
@@ -66,7 +64,7 @@ export default function EditPage({
         setDueDate(data.dueDate || "");
         setUrl(data.url || "");
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
+        setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
         setLoading(false);
       }
@@ -81,6 +79,12 @@ export default function EditPage({
     setError("");
 
     try {
+      // Validate and clean URL
+      let cleanedUrl = url ? url.trim() : "";
+      if (cleanedUrl && !cleanedUrl.startsWith('http://') && !cleanedUrl.startsWith('https://')) {
+        cleanedUrl = `https://${cleanedUrl}`;
+      }
+
       const data = {
         id: todoId,
         title,
@@ -89,26 +93,36 @@ export default function EditPage({
         priority,
         status,
         dueDate: dueDate || null,
-        url: url || "",
+        url: cleanedUrl,
       };
 
       const response = await fetch(`/api/todos/${todoId}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to update todo');
+        throw new Error(errorData.error || "Failed to update todo");
       }
 
-      router.push('/');
+      // Force revalidation of both home page and todo page
+      await Promise.all([
+        fetch('/api/revalidate?path=/', { cache: 'no-store' }),
+        fetch(`/api/revalidate?path=/view/${todoId}?page=true`, { cache: 'no-store' }),
+      ]);
+      
+      // Wait a moment for revalidation to complete
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      router.push("/");
       router.refresh();
+
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update todo');
+      setError(err instanceof Error ? err.message : "Failed to update todo");
     } finally {
       setIsSubmitting(false);
     }
@@ -134,7 +148,10 @@ export default function EditPage({
 
       <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
         <div>
-          <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="title"
+            className="block text-sm font-medium text-gray-700"
+          >
             Title
           </label>
           <RichTextEditor
@@ -146,7 +163,10 @@ export default function EditPage({
         </div>
 
         <div>
-          <label htmlFor="content" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="content"
+            className="block text-sm font-medium text-gray-700"
+          >
             Content
           </label>
           <RichTextEditor
@@ -158,7 +178,10 @@ export default function EditPage({
         </div>
 
         <div>
-          <label htmlFor="url" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="url"
+            className="block text-sm font-medium text-gray-700"
+          >
             URL (optional)
           </label>
           <input
@@ -171,7 +194,10 @@ export default function EditPage({
         </div>
 
         <div>
-          <label htmlFor="category" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="category"
+            className="block text-sm font-medium text-gray-700"
+          >
             Category
           </label>
           <select
@@ -182,14 +208,17 @@ export default function EditPage({
           >
             {CATEGORIES.map((cat) => (
               <option key={cat} value={cat}>
-                {cat.replace(/_/g, ' ')}
+                {cat.replace(/_/g, " ")}
               </option>
             ))}
           </select>
         </div>
 
         <div>
-          <label htmlFor="priority" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="priority"
+            className="block text-sm font-medium text-gray-700"
+          >
             Priority
           </label>
           <select
@@ -200,14 +229,17 @@ export default function EditPage({
           >
             {PRIORITIES.map((pri) => (
               <option key={pri} value={pri}>
-                {pri.replace(/_/g, ' ')}
+                {pri.replace(/_/g, " ")}
               </option>
             ))}
           </select>
         </div>
 
         <div>
-          <label htmlFor="status" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="status"
+            className="block text-sm font-medium text-gray-700"
+          >
             Status
           </label>
           <select
@@ -218,14 +250,17 @@ export default function EditPage({
           >
             {STATUSES.map((stat) => (
               <option key={stat} value={stat}>
-                {stat.replace(/_/g, ' ')}
+                {stat.replace(/_/g, " ")}
               </option>
             ))}
           </select>
         </div>
 
         <div>
-          <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="dueDate"
+            className="block text-sm font-medium text-gray-700"
+          >
             Due Date (optional)
           </label>
           <input
@@ -243,7 +278,7 @@ export default function EditPage({
             disabled={isSubmitting}
             className="inline-flex justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
           >
-            {isSubmitting ? 'Saving...' : 'Save Changes'}
+            {isSubmitting ? "Saving..." : "Save Changes"}
           </button>
           <Link
             href="/"

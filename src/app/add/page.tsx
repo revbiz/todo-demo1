@@ -8,12 +8,24 @@ import RichTextEditor from "@/components/RichTextEditor";
 
 export default function AddTodo() {
   const router = useRouter();
-  const [category, setCategory] = useState<TodoCategory>(TodoCategory.WORK);
-  const [priority, setPriority] = useState<Priority>(Priority.MEDIUM);
-  const [status, setStatus] = useState<Status>(Status.NOT_STARTED);
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [dueDate, setDueDate] = useState('');
+  const defaultValues = {
+    title: "",
+    content: "",
+    description: "",
+    url: "",
+    category: TodoCategory.PERSONAL,
+    priority: Priority.LOW,
+    status: Status.PENDING,
+    dueDate: null
+  };
+
+  const [category, setCategory] = useState(defaultValues.category);
+  const [priority, setPriority] = useState(defaultValues.priority);
+  const [status, setStatus] = useState(defaultValues.status);
+  const [title, setTitle] = useState(defaultValues.title);
+  const [content, setContent] = useState(defaultValues.content);
+  const [dueDate, setDueDate] = useState(defaultValues.dueDate);
+  const [url, setUrl] = useState(defaultValues.url);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -22,7 +34,7 @@ export default function AddTodo() {
     setIsSubmitting(true);
     setError(null);
 
-    if (!title.trim()) {
+    if (!title.replace(/<[^>]*>/g, '').trim()) {
       setError("Please enter a title for your todo");
       setIsSubmitting(false);
       return;
@@ -36,6 +48,7 @@ export default function AddTodo() {
         priority,
         status,
         dueDate: dueDate || null,
+        url: url.trim() || null,
       };
 
       const response = await fetch("/api/todos", {
@@ -98,12 +111,9 @@ export default function AddTodo() {
         <label htmlFor="title" className="block text-sm font-medium text-gray-700">
           Title
         </label>
-        <input
-          type="text"
-          id="title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        <RichTextEditor
+          initialContent={title}
+          onUpdate={setTitle}
           placeholder="Enter todo title"
         />
       </div>
@@ -116,6 +126,20 @@ export default function AddTodo() {
           initialContent={content}
           onUpdate={setContent}
           placeholder="Enter todo content"
+        />
+      </div>
+
+      <div>
+        <label htmlFor="url" className="block text-sm font-medium text-gray-700">
+          URL (optional)
+        </label>
+        <input
+          type="url"
+          id="url"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          placeholder="https://example.com"
         />
       </div>
 

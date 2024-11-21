@@ -29,7 +29,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { title, content, category, priority, dueDate } = body;
+    const { title, content, category, priority, dueDate, url } = body;
 
     if (!title?.trim()) {
       return NextResponse.json(
@@ -44,6 +44,7 @@ export async function POST(request: Request) {
       category: category as TodoCategory,
       priority: priority as Priority,
       dueDate: dueDate ? dueDate : null,
+      url: url ? url.trim() : null,
     });
 
     return NextResponse.json(todo);
