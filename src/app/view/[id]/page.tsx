@@ -1,20 +1,28 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { TodoCategory, Priority, Status } from "@prisma/client";
+import { RichTextContent } from '@/components/RichTextContent';
 
 interface Todo {
   id: string;
   title: string;
-  content: string | null;
-  completed: boolean;
+  description: string | null;
   category: TodoCategory;
   priority: Priority;
   status: Status;
+  dueDate: string | null;
+  url: string | null;
   createdAt: Date;
   updatedAt: Date;
+}
+
+interface ViewPageProps {
+  params: {
+    id: string;
+  };
 }
 
 function formatDate(date: Date): string {
@@ -27,37 +35,42 @@ function formatDate(date: Date): string {
   });
 }
 
+function formatDueDate(date: string): string {
+  return new Date(date).toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}
+
 export default function ViewTodo({
   params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+}: ViewPageProps) {
   const router = useRouter();
-  const { id: todoId } = use(params);
+  const todoId = params.id;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [todo, setTodo] = useState<Todo | null>(null);
 
   useEffect(() => {
-    if (todoId) {
-      fetchTodo();
-    }
-  }, [todoId]);
-
-  const fetchTodo = async () => {
-    try {
-      const response = await fetch(`/api/todos?id=${todoId}`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch todo");
+    const fetchTodo = async () => {
+      try {
+        const response = await fetch(`/api/todos/${todoId}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch todo');
+        }
+        const data: Todo = await response.json();
+        setTodo(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      } finally {
+        setLoading(false);
       }
-      const todoData: Todo = await response.json();
-      setTodo(todoData);
-    } catch (error) {
-      setError("Failed to fetch todo");
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    fetchTodo();
+  }, [todoId]);
 
   if (loading) {
     return (
@@ -74,11 +87,29 @@ export default function ViewTodo({
     );
   }
 
-  if (error || !todo) {
+  if (error) {
     return (
       <div className="max-w-4xl mx-auto p-4">
         <div className="bg-red-100 text-red-700 p-4 rounded-md">
-          {error || "Todo not found"}
+          {error}
+        </div>
+        <div className="mt-4">
+          <Link
+            href="/"
+            className="text-blue-500 hover:text-blue-700"
+          >
+            ← Back to Todos
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!todo) {
+    return (
+      <div className="max-w-4xl mx-auto p-4">
+        <div className="bg-red-100 text-red-700 p-4 rounded-md">
+          Todo not found
         </div>
         <div className="mt-4">
           <Link
@@ -110,9 +141,39 @@ export default function ViewTodo({
       </div>
 
       <div className="bg-white rounded-lg shadow-lg p-6">
-        <h1 className="text-2xl font-bold mb-4">{todo.title}</h1>
+        <RichTextContent 
+          content={todo.title} 
+          className="text-2xl font-bold mb-4"
+        />
 
-        <div className="flex gap-2 mb-4">
+        {/* Description */}
+        {todo.description && (
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold mb-2">Description</h2>
+            <RichTextContent content={todo.description} className="prose max-w-none" />
+          </div>
+        )}
+
+        {/* URL */}
+        {todo.url && (
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold mb-2">URL</h2>
+            <a
+              href={todo.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 hover:text-blue-600 hover:underline inline-flex items-center gap-1"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              {todo.url}
+            </a>
+          </div>
+        )}
+
+        {/* Metadata Section */}
+        <div className="flex flex-wrap gap-2 mb-6">
           <span
             className={`px-2 py-1 text-sm rounded-full ${
               todo.category === 'Event'
@@ -154,16 +215,24 @@ export default function ViewTodo({
           </span>
         </div>
 
-        <div 
-          className="prose prose-sm max-w-none mb-6"
-          dangerouslySetInnerHTML={{ __html: todo.content || '' }}
-        />
+        {/* Due Date Section */}
+        {todo.dueDate && (
+          <div className="mb-6">
+            <h2 className="text-sm font-medium text-gray-700 mb-1">Due Date</h2>
+            <p className="text-gray-900">
+              {formatDueDate(todo.dueDate)}
+            </p>
+          </div>
+        )}
 
-        <div className="text-sm text-gray-500 space-y-1">
-          <div>Created: {formatDate(new Date(todo.createdAt))}</div>
-          {todo.updatedAt && todo.updatedAt !== todo.createdAt && (
-            <div>Updated: {formatDate(new Date(todo.updatedAt))}</div>
-          )}
+        {/* Timestamps Section */}
+        <div className="border-t pt-4 mt-6">
+          <div className="text-sm text-gray-500 space-y-1">
+            <div>Created: {formatDate(new Date(todo.createdAt))}</div>
+            {todo.updatedAt && todo.updatedAt !== todo.createdAt && (
+              <div>Updated: {formatDate(new Date(todo.updatedAt))}</div>
+            )}
+          </div>
         </div>
       </div>
     </div>

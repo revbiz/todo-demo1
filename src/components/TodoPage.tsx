@@ -1,3 +1,5 @@
+'use client';
+
 import { TodoCategory, Priority, Status } from "@prisma/client";
 import Link from "next/link";
 import { TodoList } from "@/components/TodoList";
@@ -5,31 +7,32 @@ import { CategoryFilter } from "@/components/CategoryFilter";
 import { PriorityFilter } from "@/components/PriorityFilter";
 import { StatusFilter } from "@/components/StatusFilter";
 import { SortFilter, type SortField, type SortOrder } from "@/components/SortFilter";
+import { ReactNode } from "react";
 
 interface TodoPageProps {
   todos: any[];
   totalCount: number;
   totalPages: number;
-  currentPage: number;
   selectedCategory: TodoCategory | 'All';
   selectedPriority: Priority | 'All';
   selectedStatus: Status | 'All';
   sortField: SortField;
   sortOrder: SortOrder;
   searchParams: { [key: string]: string | undefined };
+  children?: ReactNode;
 }
 
 export function TodoPage({
   todos,
   totalCount,
   totalPages,
-  currentPage,
   selectedCategory,
   selectedPriority,
   selectedStatus,
   sortField,
   sortOrder,
   searchParams,
+  children
 }: TodoPageProps) {
   return (
     <main className="container mx-auto px-4 py-8">
@@ -71,38 +74,12 @@ export function TodoPage({
             selectedCategory={selectedCategory}
             selectedPriority={selectedPriority}
             selectedStatus={selectedStatus}
-            currentPage={currentPage}
+            currentPage={1}
             totalCount={totalCount}
           />
-        </div>
 
-        {totalPages > 1 && (
-          <div className="flex justify-center space-x-2 p-4">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-              // Create new query params without page
-              const { page: _, ...restParams } = searchParams;
-              return (
-                <Link
-                  key={page}
-                  href={{
-                    pathname: '/',
-                    query: {
-                      ...restParams,
-                      page: page.toString(),
-                    },
-                  }}
-                  className={`px-3 py-1 rounded-md ${
-                    currentPage === page
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {page}
-                </Link>
-              );
-            })}
-          </div>
-        )}
+          {children}
+        </div>
       </div>
     </main>
   );

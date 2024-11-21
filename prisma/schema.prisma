@@ -28,17 +28,19 @@ enum Status {
   Active
   Pending
   Complete
+  Forget
   OnHold
 }
 
 model Todo {
-  id        String       @id @default(cuid())
-  title     String
-  content   String?
-  completed Boolean      @default(false)
-  category  TodoCategory @default(Now)
-  priority  Priority     @default(Medium)
-  status    Status       @default(Active)
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  id          String      @id @default(cuid())
+  title       String
+  description String?
+  url         String?     @db.Text
+  category    TodoCategory
+  priority    Priority
+  status      Status      @default(Active)
+  dueDate     DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 }

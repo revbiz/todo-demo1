@@ -1,8 +1,11 @@
+'use server';
+
 import { prisma } from "@/lib/prisma";
 import { TodoCategory, Priority, Status } from "@prisma/client";
 import type { SortField, SortOrder } from "@/components/SortFilter";
 import type { Metadata } from 'next';
 import { TodoPage } from "@/components/TodoPage";
+import { Pagination } from "@/components/Pagination";
 
 const ITEMS_PER_PAGE = 3;
 
@@ -35,30 +38,37 @@ export default async function Page({
     page = defaultParams.page,
     sortField = defaultParams.sortField,
     sortOrder = defaultParams.sortOrder,
+    searchQuery
   } = searchParams;
 
   // Convert values with proper typing
   const selectedCategory = (Array.isArray(category) ? category[0] : category) as TodoCategory | 'All';
   const selectedPriority = (Array.isArray(priority) ? priority[0] : priority) as Priority | 'All';
   const selectedStatus = (Array.isArray(status) ? status[0] : status) as Status | 'All';
-  const currentPage = Number(Array.isArray(page) ? page[0] : page) || 1;
   const selectedSortField = (Array.isArray(sortField) ? sortField[0] : sortField) as SortField;
   const selectedSortOrder = (Array.isArray(sortOrder) ? sortOrder[0] : sortOrder) as SortOrder;
+  const currentPage = Math.max(1, parseInt(Array.isArray(page) ? page[0] : page, 10));
 
   // Get total count for pagination
   const totalCount = await prisma.todo.count({
     where: {
       AND: [
         selectedCategory === 'All' ? {} : {
-          category: selectedCategory as TodoCategory,
+          category: selectedCategory as TodoCategory
         },
         selectedPriority === 'All' ? {} : {
-          priority: selectedPriority as Priority,
+          priority: selectedPriority as Priority
         },
         selectedStatus === 'All' ? {} : {
-          status: selectedStatus as Status,
+          status: selectedStatus as Status
         },
-      ],
+        searchQuery ? {
+          OR: [
+            { title: { contains: searchQuery, mode: 'insensitive' } },
+            { description: { contains: searchQuery, mode: 'insensitive' } }
+          ]
+        } : {}
+      ]
     },
   });
 
@@ -69,21 +79,27 @@ export default async function Page({
     where: {
       AND: [
         selectedCategory === 'All' ? {} : {
-          category: selectedCategory as TodoCategory,
+          category: selectedCategory as TodoCategory
         },
         selectedPriority === 'All' ? {} : {
-          priority: selectedPriority as Priority,
+          priority: selectedPriority as Priority
         },
         selectedStatus === 'All' ? {} : {
-          status: selectedStatus as Status,
+          status: selectedStatus as Status
         },
-      ],
+        searchQuery ? {
+          OR: [
+            { title: { contains: searchQuery, mode: 'insensitive' } },
+            { description: { contains: searchQuery, mode: 'insensitive' } }
+          ]
+        } : {}
+      ]
     },
     orderBy: {
-      [selectedSortField]: selectedSortOrder,
+      createdAt: 'desc'
     },
-    skip: (currentPage - 1) * ITEMS_PER_PAGE,
     take: ITEMS_PER_PAGE,
+    skip: (currentPage - 1) * ITEMS_PER_PAGE
   });
 
   // Create a simplified searchParams object for the client
@@ -101,13 +117,17 @@ export default async function Page({
       todos={todos}
       totalCount={totalCount}
       totalPages={totalPages}
-      currentPage={currentPage}
       selectedCategory={selectedCategory}
       selectedPriority={selectedPriority}
       selectedStatus={selectedStatus}
       sortField={selectedSortField}
       sortOrder={selectedSortOrder}
       searchParams={serializedSearchParams}
-    />
+    >
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+      />
+    </TodoPage>
   );
 }

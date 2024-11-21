@@ -1,16 +1,24 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, TodoCategory, Priority, Status } from "@prisma/client";
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined
+declare global {
+  var cachedPrisma: PrismaClient;
 }
 
-export const prisma = globalForPrisma.prisma ?? new PrismaClient()
+let prisma: PrismaClient;
+if (process.env.NODE_ENV === "production") {
+  prisma = new PrismaClient();
+} else {
+  if (!global.cachedPrisma) {
+    global.cachedPrisma = new PrismaClient();
+  }
+  prisma = global.cachedPrisma;
+}
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+export const db = prisma;
 
 export async function getAllTodos() {
   try {
-    return await prisma.todo.findMany({
+    return await db.todo.findMany({
       orderBy: {
         createdAt: 'desc'
       }
@@ -21,13 +29,17 @@ export async function getAllTodos() {
   }
 }
 
-export async function addTodo(title: string, content?: string) {
+export async function addTodo(title: string, description?: string) {
   try {
-    return await prisma.todo.create({
+    return await db.todo.create({
       data: {
         title,
-        content,
-        completed: false
+        description: description || '',
+        category: 'Now' as TodoCategory,
+        priority: 'Medium' as Priority,
+        status: 'Active' as Status,
+        dueDate: null,
+        color: null
       }
     });
   } catch (error) {
@@ -36,9 +48,20 @@ export async function addTodo(title: string, content?: string) {
   }
 }
 
-export async function updateTodo(id: string, data: { completed?: boolean; title?: string; content?: string }) {
+export async function updateTodo(
+  id: string,
+  data: {
+    title?: string;
+    description?: string;
+    category?: TodoCategory;
+    priority?: Priority;
+    status?: Status;
+    dueDate?: string | null;
+    color?: string | null;
+  }
+) {
   try {
-    return await prisma.todo.update({
+    return await db.todo.update({
       where: { id },
       data
     });
@@ -50,7 +73,7 @@ export async function updateTodo(id: string, data: { completed?: boolean; title?
 
 export async function deleteTodo(id: string) {
   try {
-    return await prisma.todo.delete({
+    return await db.todo.delete({
       where: { id }
     });
   } catch (error) {
@@ -61,7 +84,7 @@ export async function deleteTodo(id: string) {
 
 export async function getTodoById(id: string) {
   try {
-    return await prisma.todo.findUnique({
+    return await db.todo.findUnique({
       where: { id }
     });
   } catch (error) {
@@ -72,7 +95,7 @@ export async function getTodoById(id: string) {
 
 // Initialize the database
 console.log('Starting database initialization...');
-prisma.$connect().catch(error => {
+db.$connect().catch(error => {
   console.error('Failed to initialize database:', error);
   process.exit(1);
 });

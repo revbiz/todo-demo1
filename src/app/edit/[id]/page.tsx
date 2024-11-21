@@ -1,135 +1,111 @@
-"use client";
+'use client';
 
-import { useState, useEffect, use } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { TodoCategory, Priority, Status } from "@prisma/client";
-import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import TextStyle from "@tiptap/extension-text-style";
-import { Color } from "@tiptap/extension-color";
+import RichTextEditor from "@/components/RichTextEditor";
+import Link from "next/link";
 
-const COLORS = [
-  "#000000", // black
-  "#EF4444", // red
-  "#22C55E", // green
-  "#3B82F6", // blue
-  "#F59E0B", // yellow
-  "#8B5CF6", // purple
-];
+interface EditPageProps {
+  params: {
+    id: string;
+  };
+}
 
 interface Todo {
   id: string;
   title: string;
-  content: string | null;
-  completed: boolean;
+  description: string | null;
   category: TodoCategory;
   priority: Priority;
   status: Status;
+  dueDate: string | null;
+  url: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
 
-export default function EditTodo({
+const CATEGORIES = ['Event', 'Reminder', 'Someday', 'Now'] as const;
+const PRIORITIES = ["High", "Medium", "Low"] as const;
+const STATUSES = ["Active", "Pending", "Complete", "Forget", "OnHold"] as const;
+
+export default function EditPage({
   params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+}: EditPageProps) {
   const router = useRouter();
-  const { id: todoId } = use(params);
+  const todoId = params.id;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [showColorPicker, setShowColorPicker] = useState(false);
-  const [initialContent, setInitialContent] = useState("");
   const [todo, setTodo] = useState<Todo | null>(null);
-  const [category, setCategory] = useState<TodoCategory>('Now');
-  const [priority, setPriority] = useState<Priority>('Medium');
-  const [status, setStatus] = useState<Status>('Active');
-
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-      TextStyle,
-      Color,
-    ],
-    content: initialContent,
-    editorProps: {
-      attributes: {
-        class: 'prose prose-sm focus:outline-none min-h-[200px] p-4',
-      },
-    },
-  });
-
-  // Update editor when initial content is set
-  useEffect(() => {
-    if (editor && initialContent) {
-      editor.commands.setContent(initialContent);
-    }
-  }, [editor, initialContent]);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState<TodoCategory>("Now");
+  const [priority, setPriority] = useState<Priority>("Medium");
+  const [status, setStatus] = useState<Status>("Active");
+  const [dueDate, setDueDate] = useState("");
+  const [url, setUrl] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (todoId) {
-      fetchTodo();
-    }
-  }, [todoId]);
-
-  const fetchTodo = async () => {
-    try {
-      const response = await fetch(`/api/todos?id=${todoId}`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch todo");
+    const fetchTodo = async () => {
+      try {
+        const response = await fetch(`/api/todos/${todoId}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch todo');
+        }
+        const data = await response.json();
+        setTodo(data);
+        setTitle(data.title || "");
+        setDescription(data.description || "");
+        setCategory(data.category);
+        setPriority(data.priority);
+        setStatus(data.status);
+        setDueDate(data.dueDate || "");
+        setUrl(data.url || "");
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      } finally {
+        setLoading(false);
       }
-      const todoData: Todo = await response.json();
-      setTodo(todoData);
-      setCategory(todoData.category);
-      setPriority(todoData.priority);
-      setStatus(todoData.status);
-      
-      // Set the content for the editor
-      setInitialContent(todoData.content || todoData.title);
-    } catch (error) {
-      setError("Failed to fetch todo");
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    fetchTodo();
+  }, [todoId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!todoId || !editor) return;
+    setIsSubmitting(true);
+    setError("");
 
     try {
-      const title = editor.getText().split('\n')[0].trim();
-      if (!title) {
-        setError("Please enter a title for your todo");
-        return;
-      }
+      const data = {
+        title,
+        description: description || null,
+        category,
+        priority,
+        status,
+        dueDate: dueDate || null,
+        url: url || null,
+      };
 
-      const htmlContent = editor.getHTML();
-
-      const response = await fetch("/api/todos", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: todoId,
-          title: title,
-          content: htmlContent,
-          category,
-          priority,
-          status,
-        }),
+      const response = await fetch(`/api/todos/${todoId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to update todo");
+        throw new Error('Failed to update todo');
       }
 
-      router.push("/");
+      router.push('/');
       router.refresh();
-    } catch (error) {
-      console.error("Failed to update todo:", error);
-      setError(error instanceof Error ? error.message : "Failed to update todo");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update todo');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -148,20 +124,41 @@ export default function EditTodo({
     );
   }
 
+  if (error) {
+    return (
+      <div className="max-w-4xl mx-auto p-4">
+        <div className="bg-red-100 text-red-700 p-4 rounded-md">
+          {error}
+        </div>
+      </div>
+    );
+  }
+
+  if (!todo) {
+    return (
+      <div className="max-w-4xl mx-auto p-4">
+        <div className="bg-red-100 text-red-700 p-4 rounded-md">
+          Todo not found
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="max-w-4xl mx-auto p-4">
+    <form onSubmit={handleSubmit} className="max-w-4xl mx-auto p-4 space-y-4">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Edit Todo</h1>
         <div className="space-x-2">
           <button
             type="submit"
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            disabled={isSubmitting}
+            className={`bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed`}
           >
-            Save
+            {isSubmitting ? 'Saving...' : 'Save Changes'}
           </button>
           <Link
             href="/"
-            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 inline-block"
+            className="inline-block px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50"
           >
             Cancel
           </Link>
@@ -169,98 +166,118 @@ export default function EditTodo({
       </div>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
+        <div className="bg-red-50 text-red-500 p-4 rounded-md">
           {error}
         </div>
       )}
 
       <div className="space-y-4">
-        {/* Category Selector */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Category
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Title
           </label>
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value as TodoCategory)}
-            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="Event">Event</option>
-            <option value="Reminder">Reminder</option>
-            <option value="Someday">Someday</option>
-            <option value="Now">Now</option>
-          </select>
+          <RichTextEditor
+            initialContent={title}
+            onChange={setTitle}
+            placeholder="Enter todo title..."
+            minHeight="2.5rem"
+          />
         </div>
 
-        {/* Priority Selector */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Priority
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Description
           </label>
-          <select
-            value={priority}
-            onChange={(e) => setPriority(e.target.value as Priority)}
-            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="High">High</option>
-            <option value="Medium">Medium</option>
-            <option value="Low">Low</option>
-          </select>
+          <RichTextEditor
+            initialContent={description}
+            onChange={setDescription}
+            placeholder="Enter todo description..."
+            minHeight="8rem"
+          />
         </div>
 
-        {/* Status Selector */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Status
+          <label htmlFor="url" className="block text-sm font-medium text-gray-700 mb-1">
+            URL (optional)
           </label>
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value as Status)}
-            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="Active">Active</option>
-            <option value="Pending">Pending</option>
-            <option value="Complete">Complete</option>
-            <option value="Forget">Forget</option>
-            <option value="OnHold">On Hold</option>
-          </select>
+          <input
+            type="url"
+            id="url"
+            name="url"
+            value={url || ''}
+            onChange={(e) => setUrl(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            placeholder="https://example.com"
+          />
         </div>
 
-        {/* Editor */}
-        <div className="border rounded-lg overflow-hidden">
-          {/* Rich Text Editor Toolbar */}
-          <div className="border-b bg-gray-50 p-2 flex gap-2 flex-wrap items-center">
-            <button
-              type="button"
-              onClick={() => editor?.chain().focus().toggleBold().run()}
-              className={`p-2 rounded ${
-                editor?.isActive("bold") ? "bg-gray-200" : "hover:bg-gray-200"
-              }`}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="category" className="block text-sm font-medium text-gray-700">
+              Category
+            </label>
+            <select
+              id="category"
+              value={category}
+              onChange={(e) => setCategory(e.target.value as TodoCategory)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             >
-              <strong>B</strong>
-            </button>
-            <button
-              type="button"
-              onClick={() => editor?.chain().focus().toggleItalic().run()}
-              className={`p-2 rounded ${
-                editor?.isActive("italic") ? "bg-gray-200" : "hover:bg-gray-200"
-              }`}
-            >
-              <em>I</em>
-            </button>
-            <button
-              type="button"
-              onClick={() => editor?.chain().focus().toggleBulletList().run()}
-              className={`p-2 rounded ${
-                editor?.isActive("bulletList") ? "bg-gray-200" : "hover:bg-gray-200"
-              }`}
-            >
-              • List
-            </button>
+              {CATEGORIES.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
           </div>
 
-          {/* Editor Content */}
-          <EditorContent editor={editor} />
+          <div>
+            <label htmlFor="priority" className="block text-sm font-medium text-gray-700">
+              Priority
+            </label>
+            <select
+              id="priority"
+              value={priority}
+              onChange={(e) => setPriority(e.target.value as Priority)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              {PRIORITIES.map((pri) => (
+                <option key={pri} value={pri}>
+                  {pri}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="status" className="block text-sm font-medium text-gray-700">
+              Status
+            </label>
+            <select
+              id="status"
+              value={status}
+              onChange={(e) => setStatus(e.target.value as Status)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              {STATUSES.map((stat) => (
+                <option key={stat} value={stat}>
+                  {stat}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700">
+              Due Date
+            </label>
+            <input
+              type="date"
+              id="dueDate"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
         </div>
       </div>
     </form>
