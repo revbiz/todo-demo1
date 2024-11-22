@@ -5,7 +5,7 @@ export type { TodoCategory, Priority, Status };
 export type Todo = {
   id: string;
   title: string;
-  description?: string | null;
+  content?: string | null;
   url?: string | null;
   category: TodoCategory;
   priority: Priority;
@@ -18,7 +18,7 @@ export type Todo = {
 
 export type TodoFormData = {
   title: string;
-  description?: string;
+  content?: string;
   url?: string;
   category: TodoCategory;
   priority: Priority;

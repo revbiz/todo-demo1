@@ -85,12 +85,12 @@ function TodoItem({ todo, onDelete, isDeleting }: TodoItemProps) {
   };
 
   // Process description to be more compact
-  const processDescription = (description: string | null): string => {
-    if (!description) return "";
+  const processDescription = (content: string | null | undefined): string => {
+    if (!content) return "";
 
     // Only truncate if not expanded and content is long
-    if (!isExpanded && isContentLong(description, "description")) {
-      const textContent = description
+    if (!isExpanded && isContentLong(content, "description")) {
+      const textContent = content
         .replace(/<[^>]*>/g, "")
         .replace(/&nbsp;/g, " ")
         .replace(/&amp;/g, "&");
@@ -98,7 +98,7 @@ function TodoItem({ todo, onDelete, isDeleting }: TodoItemProps) {
       return `${textContent.slice(0, DESCRIPTION_PREVIEW_LENGTH)}...`;
     }
 
-    return description;
+    return content;
   };
 
   const processContent = (content: string | null): string => {
@@ -141,11 +141,11 @@ function TodoItem({ todo, onDelete, isDeleting }: TodoItemProps) {
 
   const displayTitle = processTitle(todo.title);
   const isTitleTruncated = todo.title && isContentLong(todo.title, "title");
-  const displayContent = processContent(todo.description || "");
+  const displayContent = processContent(todo.content || "");
 
-  const hasTitleOrDescriptionLong =
+  const hasTitleOrContentLong =
     (todo.title && isContentLong(todo.title, "title")) ||
-    (todo.description && isContentLong(todo.description, "content"));
+    (todo.content && isContentLong(todo.content, "content"));
 
   const getCategoryColor = (category: TodoCategory) => {
     switch (category) {
@@ -195,19 +195,22 @@ function TodoItem({ todo, onDelete, isDeleting }: TodoItemProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-3 sm:p-4 mb-4 w-full">
-      <div className="flex flex-col sm:flex-row justify-between gap-3">
-        <div className="flex-grow min-w-0 space-y-2">
+    <div className="bg-white rounded-lg shadow-sm border p-2 sm:p-4 mb-3 w-full">
+      <div className="flex flex-col sm:flex-row justify-between gap-2">
+        <div className="flex-grow min-w-0 space-y-1.5">
           <div className="title-wrapper">
             <div className="text-base sm:text-lg font-semibold flex flex-wrap items-baseline gap-1">
               <div
-                className="title-content flex-grow"
+                className="title-content flex-grow min-w-0"
                 dangerouslySetInnerHTML={{
                   __html: `<p>${processTitle(todo.title)}</p>`,
                 }}
               />
               {isContentLong(todo.title, "title") && (
-                <Link href={`/view/${todo.id}`} className="title-read-more shrink-0">
+                <Link
+                  href={`/view/${todo.id}`}
+                  className="title-read-more shrink-0"
+                >
                   Read more
                 </Link>
               )}
@@ -217,40 +220,47 @@ function TodoItem({ todo, onDelete, isDeleting }: TodoItemProps) {
           <div className="prose prose-sm max-w-none">
             <div className="content-wrapper">
               <div
-                className="content-preview"
+                className="content-preview min-w-0 text-[11px] sm:text-sm text-gray-600"
                 dangerouslySetInnerHTML={{
-                  __html: `<p>${processContent(todo.description || "")}</p>`,
+                  __html: `<p>${processDescription(todo.content)}</p>`,
                 }}
               />
-              {isContentLong(todo.description || "", "content") && (
-                <Link href={`/view/${todo.id}`} className="content-read-more">
+              {isContentLong(todo.content || "", "description") && (
+                <Link href={`/view/${todo.id}`} className="content-read-more text-[11px] sm:text-sm text-blue-500 hover:text-blue-600">
                   Read more
                 </Link>
               )}
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-1.5 sm:gap-2">
+          <div className="flex flex-wrap items-center">
             <span
-              className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-xs sm:text-sm ${getCategoryColor(
+              className={`inline-flex px-0.5 sm:px-2 py-0.5 mr-0.5 sm:mr-2 rounded text-[8px] sm:text-sm leading-none ${getCategoryColor(
                 todo.category
               )}`}
             >
               {todo.category}
             </span>
             <span
-              className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-xs sm:text-sm ${getPriorityColor(
+              className={`inline-flex px-0.5 sm:px-2 py-0.5 mr-0.5 sm:mr-2 rounded text-[8px] sm:text-sm leading-none ${getPriorityColor(
                 todo.priority
               )}`}
             >
               {todo.priority}
             </span>
             <span
-              className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-xs sm:text-sm ${getStatusColor(
+              className={`inline-flex px-0.5 sm:px-2 py-0.5 rounded text-[8px] sm:text-sm leading-none ${getStatusColor(
                 todo.status
               )}`}
             >
               {todo.status}
+            </span>
+          </div>
+
+          <div className="mt-1 text-[8px] sm:text-xs text-gray-500 flex items-center">
+            <span className="inline-flex items-center">
+              <span className="mr-0.5 sm:mr-2">Created: {formatDate(todo.createdAt)}</span>
+              <span>Updated: {formatDate(todo.updatedAt)}</span>
             </span>
           </div>
         </div>
@@ -258,20 +268,20 @@ function TodoItem({ todo, onDelete, isDeleting }: TodoItemProps) {
         <div className="flex flex-row sm:flex-col gap-1.5 sm:gap-2 justify-end mt-2 sm:mt-0">
           <Link
             href={`/view/${todo.id}`}
-            className="flex-1 sm:flex-initial bg-green-500 text-white px-2 sm:px-3 py-1 rounded text-xs sm:text-sm hover:bg-green-600 inline-flex items-center justify-center min-w-[50px] sm:min-w-[60px]"
+            className="flex-1 sm:flex-initial bg-green-500 text-white px-2 sm:px-3 py-1 rounded text-[11px] sm:text-sm hover:bg-green-600 inline-flex items-center justify-center min-w-[45px] sm:min-w-[60px]"
           >
             View
           </Link>
           <Link
             href={`/edit/${todo.id}`}
-            className="flex-1 sm:flex-initial bg-blue-500 text-white px-2 sm:px-3 py-1 rounded text-xs sm:text-sm hover:bg-blue-600 inline-flex items-center justify-center min-w-[50px] sm:min-w-[60px]"
+            className="flex-1 sm:flex-initial bg-blue-500 text-white px-2 sm:px-3 py-1 rounded text-[11px] sm:text-sm hover:bg-blue-600 inline-flex items-center justify-center min-w-[45px] sm:min-w-[60px]"
           >
             Edit
           </Link>
           <button
             onClick={() => onDelete(todo.id)}
             disabled={isDeleting}
-            className="flex-1 sm:flex-initial bg-red-500 text-white px-2 sm:px-3 py-1 rounded text-xs sm:text-sm hover:bg-red-600 inline-flex items-center justify-center min-w-[50px] sm:min-w-[60px] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 sm:flex-initial bg-red-500 text-white px-2 sm:px-3 py-1 rounded text-[11px] sm:text-sm hover:bg-red-600 inline-flex items-center justify-center min-w-[45px] sm:min-w-[60px] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isDeleting ? "..." : "Delete"}
           </button>
@@ -279,25 +289,20 @@ function TodoItem({ todo, onDelete, isDeleting }: TodoItemProps) {
       </div>
 
       {todo.url && (
-        <div className="mt-3 p-2 bg-gray-50 rounded flex flex-col sm:flex-row gap-2 items-start sm:items-center">
-          <span className="text-xs sm:text-sm text-gray-600 font-medium whitespace-nowrap">
-            Related Link:
+        <div className="mt-2 p-1.5 sm:p-2 bg-gray-50 rounded flex flex-col sm:flex-row gap-1 sm:gap-2 items-start sm:items-center">
+          <span className="text-[11px] sm:text-sm text-gray-600 font-medium whitespace-nowrap">
+            Link:
           </span>
           <a
             href={todo.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-500 hover:text-blue-600 break-all text-xs sm:text-sm flex-grow"
+            className="text-blue-500 hover:text-blue-600 break-all text-[11px] sm:text-sm flex-grow"
           >
             {todo.url}
           </a>
         </div>
       )}
-
-      <div className="mt-3 text-xs text-gray-500 flex flex-col sm:flex-row gap-1 sm:gap-4">
-        <span>Created: {formatDate(todo.createdAt)}</span>
-        <span>Updated: {formatDate(todo.updatedAt)}</span>
-      </div>
     </div>
   );
 }

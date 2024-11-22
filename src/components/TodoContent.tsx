@@ -3,23 +3,20 @@
 import { useEffect, useState } from 'react';
 
 interface TodoContentProps {
-  description: string;
+  content: string;
 }
 
-export function TodoContent({ description }: TodoContentProps) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return <div className="text-gray-800">{description}</div>;
+export function TodoContent({ content }: TodoContentProps) {
+  // If the content is already HTML, render it directly
+  if (content.includes('<p>')) {
+    return (
+      <div
+        className="prose prose-sm sm:prose-base max-w-none"
+        dangerouslySetInnerHTML={{ __html: content }}
+      />
+    );
   }
 
-  return (
-    <div className="text-gray-800 [&_p]:mb-0 [&_span]:mb-0">
-      {description}
-    </div>
-  );
+  // Otherwise, render as plain text
+  return <div className="text-gray-800">{content}</div>;
 }

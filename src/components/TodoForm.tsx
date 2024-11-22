@@ -4,23 +4,20 @@ import { TodoCategory, Priority, Status } from "@prisma/client";
 import { useState, useRef, useEffect } from "react";
 
 interface Todo {
-  id: string;
+  id?: string;
   title: string;
-  description: string | null;
+  content: string | null;
+  url?: string | null;
   category: TodoCategory;
   priority: Priority;
   status: Status;
-  dueDate: string | null;
-  color: string | null;
-  createdAt: Date;
-  updatedAt: Date;
+  dueDate?: Date | null;
 }
 
 interface TodoFormProps {
   todo: Todo;
   onSubmit: (formData: FormData) => Promise<void>;
-  showColorPicker: boolean;
-  setShowColorPicker: (show: boolean) => void;
+  isSubmitting: boolean;
 }
 
 const COLORS = [
@@ -35,11 +32,10 @@ const COLORS = [
 export function TodoForm({
   todo,
   onSubmit,
-  showColorPicker,
-  setShowColorPicker,
+  isSubmitting,
 }: TodoFormProps) {
   const [error, setError] = useState("");
-  const [currentColor, setCurrentColor] = useState<string | null>(todo.color);
+  const [currentColor, setCurrentColor] = useState<string | null>(null);
   const titleRef = useRef<HTMLDivElement>(null);
   const [title, setTitle] = useState(todo.title);
 
@@ -58,8 +54,10 @@ export function TodoForm({
     const formElements = form.elements as HTMLFormControlsCollection;
     
     // Add form fields to FormData
-    formData.append('title', titleRef.current?.textContent || '');
-    formData.append('description', (formElements.namedItem('description') as HTMLTextAreaElement).value);
+    formData.append('id', todo.id || '');
+    formData.append('title', (formElements.namedItem('title') as HTMLInputElement).value);
+    formData.append('content', (formElements.namedItem('content') as HTMLTextAreaElement).value);
+    formData.append('url', (formElements.namedItem('url') as HTMLInputElement).value);
     formData.append('category', (formElements.namedItem('category') as HTMLSelectElement).value);
     formData.append('priority', (formElements.namedItem('priority') as HTMLSelectElement).value);
     formData.append('status', (formElements.namedItem('status') as HTMLSelectElement).value);
@@ -81,11 +79,9 @@ export function TodoForm({
       const span = document.createElement('span');
       span.style.color = color;
       range.surroundContents(span);
-      setShowColorPicker(false);
     } else {
       // If no text is selected, set the color for future typing
       setCurrentColor(color);
-      setShowColorPicker(false);
     }
   };
 
@@ -119,15 +115,28 @@ export function TodoForm({
       </div>
 
       <div>
-        <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-          Description
+        <label htmlFor="content" className="block text-sm font-medium text-gray-700">
+          Content
         </label>
         <textarea
-          name="description"
-          id="description"
+          name="content"
+          id="content"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          defaultValue={todo.content || ""}
           rows={4}
-          defaultValue={todo.description || ""}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        />
+      </div>
+
+      <div>
+        <label htmlFor="url" className="block text-sm font-medium text-gray-700">
+          URL
+        </label>
+        <input
+          type="url"
+          name="url"
+          id="url"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          defaultValue={todo.url || ""}
         />
       </div>
 
@@ -187,10 +196,10 @@ export function TodoForm({
           Due Date
         </label>
         <input
-          type="date"
+          type="datetime-local"
           name="dueDate"
           id="dueDate"
-          defaultValue={todo.dueDate || undefined}
+          defaultValue={todo.dueDate ? new Date(todo.dueDate).toISOString().slice(0, 16) : undefined}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
         />
       </div>
@@ -200,10 +209,10 @@ export function TodoForm({
         <div className="mt-1 flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setShowColorPicker(!showColorPicker)}
+            onClick={() => setCurrentColor(null)}
             className="px-3 py-2 text-sm border rounded-md hover:bg-gray-50"
           >
-            {showColorPicker ? "Hide Colors" : "Show Colors"}
+            Reset Colors
           </button>
           {currentColor && (
             <div
@@ -212,34 +221,18 @@ export function TodoForm({
             />
           )}
         </div>
-        {showColorPicker && (
-          <div className="mt-2 flex flex-wrap gap-2">
-            {COLORS.map((color) => (
-              <button
-                key={color}
-                type="button"
-                onClick={() => handleColorClick(color)}
-                className="w-8 h-8 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                style={{ backgroundColor: color }}
-                title={`Set text color to ${color}`}
-              />
-            ))}
+        <div className="mt-2 flex flex-wrap gap-2">
+          {COLORS.map((color) => (
             <button
+              key={color}
               type="button"
-              onClick={() => {
-                setCurrentColor(null);
-                setShowColorPicker(false);
-                if (titleRef.current) {
-                  titleRef.current.style.color = '';
-                }
-              }}
-              className="w-8 h-8 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center justify-center"
-              title="Reset color"
-            >
-              ✕
-            </button>
-          </div>
-        )}
+              onClick={() => handleColorClick(color)}
+              className="w-8 h-8 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              style={{ backgroundColor: color }}
+              title={`Set text color to ${color}`}
+            />
+          ))}
+        </div>
       </div>
 
       <div className="flex justify-end space-x-3">
@@ -252,9 +245,10 @@ export function TodoForm({
         </button>
         <button
           type="submit"
+          disabled={isSubmitting}
           className="px-4 py-2 bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-600"
         >
-          Save Changes
+          {isSubmitting ? 'Saving...' : 'Save Changes'}
         </button>
       </div>
     </form>
