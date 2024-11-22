@@ -172,9 +172,12 @@ export default function ViewTodo({
         <div className="mt-4">
           <Link
             href="/"
-            className="text-blue-500 hover:text-blue-700"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md shadow-sm hover:bg-gray-200 transition-colors duration-150"
           >
-            ← Back to Todos
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Todos
           </Link>
         </div>
       </div>
@@ -190,9 +193,12 @@ export default function ViewTodo({
         <div className="mt-4">
           <Link
             href="/"
-            className="text-blue-500 hover:text-blue-700"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md shadow-sm hover:bg-gray-200 transition-colors duration-150"
           >
-            ← Back to Todos
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Todos
           </Link>
         </div>
       </div>
@@ -201,27 +207,28 @@ export default function ViewTodo({
 
   return (
     <div className="max-w-4xl mx-auto p-4">
-      <div className="mb-6 flex justify-between items-center">
+      <div className="mb-6 flex justify-end items-center gap-2">
         <Link
           href="/"
-          className="text-blue-500 hover:text-blue-700"
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md shadow-sm hover:bg-gray-200 transition-colors duration-150"
         >
-          ← Back to Todos
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Back to Todos
         </Link>
-        <div className="space-x-2">
-          <Link
-            href={`/edit/${todo.id}`}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
-          >
-            Edit
-          </Link>
-          <button
-            onClick={handleDelete}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700"
-          >
-            Delete
-          </button>
-        </div>
+        <Link
+          href={`/edit/${todo.id}`}
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+        >
+          Edit
+        </Link>
+        <button
+          onClick={handleDelete}
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700"
+        >
+          Delete
+        </button>
       </div>
 
       <div className="bg-white shadow rounded-lg p-6">

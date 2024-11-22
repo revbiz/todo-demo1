@@ -26,18 +26,18 @@ export function TodoPage({
   totalCount,
 }: TodoPageProps) {
   return (
-    <main className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Todos PG ({totalCount})</h1>
+    <main className="container mx-auto px-1">
+      <div className="flex justify-between items-center mb-3">
+        <h1 className="text-2xl font-bold">Todos PG ({totalCount})</h1>
         <Link
           href="/add"
-          className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded"
+          className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-1.5 px-3 rounded"
         >
           Add Todo
         </Link>
       </div>
 
-      <div className="flex flex-wrap gap-4 mb-6">
+      <div className="flex flex-wrap gap-2 mb-3">
         <CategoryFilter selected={selectedCategory} />
         <PriorityFilter selected={selectedPriority} />
         <StatusFilter selected={selectedStatus} />

@@ -142,7 +142,7 @@ export default async function Page({ searchParams = {} }: PageProps) {
   });
 
   return (
-    <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 max-w-3xl">
+    <div className="container mx-auto px-1 sm:px-2 py-2 sm:py-4 max-w-3xl">
       <TodoPage
         todos={todos}
         selectedCategory={selectedCategory}

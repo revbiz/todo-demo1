@@ -149,3 +149,75 @@
 .prose {
   @apply max-w-full;
 }
+
+/* Rich Text Editor Styles */
+.rich-text-editor {
+  @apply border rounded-md bg-white overflow-hidden;
+}
+
+.rich-text-editor .ProseMirror {
+  @apply min-h-[100px] max-h-[400px] overflow-y-auto px-3 py-2 outline-none;
+}
+
+/* Font Size Styles */
+span[style*="font-size: 12px"] {
+  font-size: 12px !important;
+  line-height: 1.4;
+}
+
+span[style*="font-size: 16px"] {
+  font-size: 16px !important;
+  line-height: 1.5;
+}
+
+span[style*="font-size: 20px"] {
+  font-size: 20px !important;
+  line-height: 1.4;
+}
+
+span[style*="font-size: 24px"] {
+  font-size: 24px !important;
+  line-height: 1.3;
+}
+
+/* Menu Bar Styles */
+.rich-text-editor .menu-bar {
+  @apply flex flex-wrap items-center gap-1 p-1.5 bg-gray-50 border-b;
+}
+
+.rich-text-editor .menu-bar button {
+  @apply p-1.5 rounded hover:bg-gray-200 transition-colors;
+}
+
+.rich-text-editor .menu-bar button.is-active {
+  @apply bg-gray-200;
+}
+
+.rich-text-editor .menu-bar select {
+  @apply text-sm border-gray-300 rounded-md focus:border-blue-500 focus:ring-blue-500;
+}
+
+/* Mobile optimization */
+@media (max-width: 640px) {
+  .rich-text-editor .menu-bar {
+    @apply p-1 gap-0.5;
+  }
+  
+  .rich-text-editor .menu-bar button {
+    @apply p-1;
+  }
+
+  .rich-text-editor .menu-bar button svg {
+    @apply w-4 h-4;
+  }
+
+  .rich-text-editor .menu-bar select {
+    @apply text-xs py-0.5 px-1;
+  }
+}
+
+/* Ensure font sizes are preserved in title and content */
+.title-content [style*="font-size"],
+.content-preview [style*="font-size"] {
+  display: inline !important;
+}

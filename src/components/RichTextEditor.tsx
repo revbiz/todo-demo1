@@ -1,11 +1,11 @@
 'use client';
 
-import { useEditor, EditorContent } from '@tiptap/react';
+import { Editor, useEditor, EditorContent, Extension } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import Underline from '@tiptap/extension-underline';
+import { Color } from '@tiptap/extension-color';
 import TextStyle from '@tiptap/extension-text-style';
-import Color from '@tiptap/extension-color';
-import { Extension } from '@tiptap/core';
-import { useState, useEffect } from 'react';
+import { Mark, mergeAttributes } from '@tiptap/core';
 
 interface RichTextEditorProps {
   initialContent?: string;
@@ -13,79 +13,126 @@ interface RichTextEditorProps {
   placeholder?: string;
 }
 
-const fontSizes = [
-  { label: 'Small', value: '0.875em' },
-  { label: 'Normal', value: '1em' },
-  { label: 'Large', value: '1.25em' },
-  { label: 'XL', value: '1.5em' },
-];
-
-const colors = [
-  { label: 'Default', value: 'inherit' },
-  { label: 'Black', value: '#000000' },
-  { label: 'Gray', value: '#666666' },
-  { label: 'Red', value: '#ff0000' },
-  { label: 'Blue', value: '#0000ff' },
-  { label: 'Green', value: '#008000' },
-];
-
-// Create a custom extension for font size
-const FontSize = Extension.create({
+const FontSize = Mark.create({
   name: 'fontSize',
   addOptions() {
     return {
       types: ['textStyle'],
     };
   },
-  addGlobalAttributes() {
+  addAttributes() {
+    return {
+      size: {
+        default: null,
+        parseHTML: element => element.style.fontSize,
+        renderHTML: attributes => {
+          if (!attributes.size) {
+            return {};
+          }
+          return {
+            style: `font-size: ${attributes.size}`,
+          };
+        },
+      },
+    };
+  },
+  parseHTML() {
     return [
       {
-        types: this.options.types,
-        attributes: {
-          fontSize: {
-            default: null,
-            parseHTML: element => element.style.fontSize?.replace(/['"]/g, ''),
-            renderHTML: attributes => {
-              if (!attributes.fontSize) {
-                return {};
-              }
-              return {
-                style: `font-size: ${attributes.fontSize}`,
-              };
-            },
-          },
-        },
+        style: 'font-size',
       },
     ];
   },
+  renderHTML({ HTMLAttributes }) {
+    return ['span', mergeAttributes(HTMLAttributes), 0];
+  },
 });
 
-const MenuBar = ({ editor }: { editor: any }) => {
+const fontSizes = [
+  { label: 'Small', value: '12px' },
+  { label: 'Normal', value: '16px' },
+  { label: 'Large', value: '20px' },
+  { label: 'Huge', value: '24px' },
+];
+
+const MenuBar = ({ editor }: { editor: Editor | null }) => {
   if (!editor) {
     return null;
   }
 
+  const colors = [
+    { label: 'Default', value: '#000000' },
+    { label: 'Gray', value: '#666666' },
+    { label: 'Red', value: '#ff0000' },
+    { label: 'Blue', value: '#0000ff' },
+    { label: 'Green', value: '#00ff00' },
+  ];
+
   return (
-    <div className="flex flex-wrap gap-2 p-2 border-b overflow-x-auto whitespace-nowrap scrollbar-hide">
+    <div className="menu-bar">
       <button
-        onClick={() => editor.chain().focus().toggleBold().run()}
-        className={`min-w-[40px] px-2 py-1 rounded ${editor.isActive('bold') ? 'bg-gray-200' : 'hover:bg-gray-100'}`}
         type="button"
+        onClick={() => editor.chain().focus().toggleBold().run()}
+        className={editor.isActive('bold') ? 'is-active' : ''}
+        title="Bold"
       >
-        B
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 4h8a4 4 0 014 4 4 4 0 01-4 4H6z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 12h9a4 4 0 014 4 4 4 0 01-4 4H6z" />
+        </svg>
       </button>
       <button
-        onClick={() => editor.chain().focus().toggleItalic().run()}
-        className={`min-w-[40px] px-2 py-1 rounded ${editor.isActive('italic') ? 'bg-gray-200' : 'hover:bg-gray-100'}`}
         type="button"
+        onClick={() => editor.chain().focus().toggleItalic().run()}
+        className={editor.isActive('italic') ? 'is-active' : ''}
+        title="Italic"
       >
-        I
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l-4 4m4-4l-4-4" />
+        </svg>
+      </button>
+      <button
+        type="button"
+        onClick={() => editor.chain().focus().toggleUnderline().run()}
+        className={editor.isActive('underline') ? 'is-active' : ''}
+        title="Underline"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h10m-10 4h10M5 3v10a7 7 0 0014 0V3" />
+        </svg>
+      </button>
+      <button
+        type="button"
+        onClick={() => editor.chain().focus().toggleBulletList().run()}
+        className={editor.isActive('bulletList') ? 'is-active' : ''}
+        title="Bullet List"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+      <button
+        type="button"
+        onClick={() => editor.chain().focus().toggleOrderedList().run()}
+        className={editor.isActive('orderedList') ? 'is-active' : ''}
+        title="Numbered List"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20h14M7 12h14M7 4h14M3 20h.01M3 12h.01M3 4h.01" />
+        </svg>
       </button>
       <select
+        value={editor.getAttributes('fontSize').size || ''}
         onChange={(e) => {
-          editor.chain().focus().setMark('textStyle', { fontSize: e.target.value }).run();
+          const size = e.target.value;
+          if (!size) {
+            editor.chain().focus().unsetMark('fontSize').run();
+          } else {
+            editor.chain().focus().setMark('fontSize', { size }).run();
+          }
         }}
-        className="min-w-[90px] px-2 py-1 rounded border hover:bg-gray-50"
+        className="min-w-[80px] px-2 py-1 text-sm rounded border hover:bg-gray-50"
+        title="Font Size"
       >
         <option value="">Size</option>
         {fontSizes.map((size) => (
@@ -95,10 +142,10 @@ const MenuBar = ({ editor }: { editor: any }) => {
         ))}
       </select>
       <select
-        onChange={(e) => {
-          editor.chain().focus().setColor(e.target.value).run();
-        }}
-        className="min-w-[90px] px-2 py-1 rounded border hover:bg-gray-50"
+        onChange={(e) => editor.chain().focus().setColor(e.target.value).run()}
+        value={editor.getAttributes('textStyle').color || ''}
+        className="min-w-[80px] px-2 py-1 text-sm rounded border hover:bg-gray-50"
+        title="Text Color"
       >
         <option value="">Color</option>
         {colors.map((color) => (
@@ -107,69 +154,47 @@ const MenuBar = ({ editor }: { editor: any }) => {
           </option>
         ))}
       </select>
-      <button
-        onClick={() => editor.chain().focus().setParagraph().run()}
-        className={`min-w-[40px] px-2 py-1 rounded ${editor.isActive('paragraph') ? 'bg-gray-200' : 'hover:bg-gray-100'}`}
-        type="button"
-      >
-        ¶
-      </button>
-      <button
-        onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-        className={`min-w-[40px] px-2 py-1 rounded ${editor.isActive('heading', { level: 2 }) ? 'bg-gray-200' : 'hover:bg-gray-100'}`}
-        type="button"
-      >
-        H2
-      </button>
-      <button
-        onClick={() => editor.chain().focus().toggleBulletList().run()}
-        className={`min-w-[40px] px-2 py-1 rounded ${editor.isActive('bulletList') ? 'bg-gray-200' : 'hover:bg-gray-100'}`}
-        type="button"
-      >
-        •
-      </button>
-      <button
-        onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        className={`min-w-[40px] px-2 py-1 rounded ${editor.isActive('orderedList') ? 'bg-gray-200' : 'hover:bg-gray-100'}`}
-        type="button"
-      >
-        1.
-      </button>
     </div>
   );
 };
 
-export default function RichTextEditor({ initialContent = '', onUpdate, placeholder }: RichTextEditorProps) {
-  const [isMounted, setIsMounted] = useState(false);
-
+const RichTextEditor = ({ initialContent, onUpdate, placeholder }: RichTextEditorProps) => {
   const editor = useEditor({
-    extensions: [StarterKit, TextStyle, Color, FontSize],
-    content: initialContent,
+    extensions: [
+      StarterKit.configure({
+        paragraph: {
+          HTMLAttributes: {
+            class: 'text-base leading-relaxed',
+          },
+        },
+      }),
+      Underline,
+      TextStyle,
+      Color,
+      FontSize,
+    ],
+    content: initialContent || '',
+    onUpdate: ({ editor }) => {
+      const html = editor.getHTML();
+      onUpdate?.(html);
+    },
     editorProps: {
       attributes: {
-        class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl focus:outline-none min-h-[100px] p-4',
+        class: 'prose max-w-none focus:outline-none',
       },
     },
-    onUpdate: ({ editor }) => {
-      if (onUpdate) {
-        onUpdate(editor.getHTML());
-      }
-    },
-    immediatelyRender: false
   });
 
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  if (!isMounted) {
-    return <div className="h-[42px] bg-white border rounded-md" />;
+  if (!editor) {
+    return null;
   }
 
   return (
-    <div className="border rounded-md bg-white overflow-hidden">
+    <div className="rich-text-editor">
       <MenuBar editor={editor} />
       <EditorContent editor={editor} />
     </div>
   );
-}
+};
+
+export default RichTextEditor;
