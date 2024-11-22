@@ -1,17 +1,25 @@
 'use client';
 
-import { Editor, useEditor, EditorContent, Extension } from '@tiptap/react';
+import { Editor, useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import { Color } from '@tiptap/extension-color';
 import TextStyle from '@tiptap/extension-text-style';
 import { Mark, mergeAttributes } from '@tiptap/core';
+import { useEffect } from 'react';
 
 interface RichTextEditorProps {
   initialContent?: string;
   onUpdate?: (content: string) => void;
   placeholder?: string;
 }
+
+const fontSizes = [
+  { label: 'Small', value: '12px' },
+  { label: 'Normal', value: '16px' },
+  { label: 'Large', value: '20px' },
+  { label: 'Huge', value: '24px' },
+];
 
 const FontSize = Mark.create({
   name: 'fontSize',
@@ -47,13 +55,6 @@ const FontSize = Mark.create({
     return ['span', mergeAttributes(HTMLAttributes), 0];
   },
 });
-
-const fontSizes = [
-  { label: 'Small', value: '12px' },
-  { label: 'Normal', value: '16px' },
-  { label: 'Large', value: '20px' },
-  { label: 'Huge', value: '24px' },
-];
 
 const MenuBar = ({ editor }: { editor: Editor | null }) => {
   if (!editor) {
@@ -122,10 +123,10 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
         </svg>
       </button>
       <select
-        value={editor.getAttributes('fontSize').size || ''}
+        value={editor.getAttributes('fontSize').size || '16px'}
         onChange={(e) => {
           const size = e.target.value;
-          if (!size) {
+          if (size === '16px') {
             editor.chain().focus().unsetMark('fontSize').run();
           } else {
             editor.chain().focus().setMark('fontSize', { size }).run();
@@ -134,7 +135,6 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
         className="min-w-[80px] px-2 py-1 text-sm rounded border hover:bg-gray-50"
         title="Font Size"
       >
-        <option value="">Size</option>
         {fontSizes.map((size) => (
           <option key={size.value} value={size.value}>
             {size.label}
@@ -184,6 +184,12 @@ const RichTextEditor = ({ initialContent, onUpdate, placeholder }: RichTextEdito
       },
     },
   });
+
+  useEffect(() => {
+    if (editor && initialContent !== editor.getHTML()) {
+      editor.commands.setContent(initialContent || '');
+    }
+  }, [editor, initialContent]);
 
   if (!editor) {
     return null;

@@ -13,8 +13,8 @@ import { StatusFilter } from "@/components/StatusFilter";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Todo App PG",
-  description: "A simple todo app using Next.js and PostgreSQL",
+  title: "View All Todos - Todo App PG",
+  description: "View all todos in the todo app",
 };
 
 interface PageProps {
@@ -28,7 +28,7 @@ interface PageProps {
   };
 }
 
-export default async function Page({ searchParams }: PageProps) {
+export default async function ViewAllPage({ searchParams }: PageProps) {
   const currentPage = Number(searchParams.page) || 1;
   const selectedCategory = (searchParams.category as TodoCategory | "All") || "All";
   const selectedPriority = (searchParams.priority as Priority | "All") || "All";
@@ -61,8 +61,14 @@ export default async function Page({ searchParams }: PageProps) {
   return (
     <main className="container mx-auto px-1">
       <div className="flex justify-between items-center mb-3">
-        <h1 className="text-2xl font-bold">Todos PG ({totalCount})</h1>
+        <h1 className="text-2xl font-bold">All Todos ({totalCount})</h1>
         <div className="flex gap-2">
+          <Link
+            href="/"
+            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+          >
+            Home
+          </Link>
           <Link
             href="/add"
             className="px-4 py-2 bg-emerald-500 text-white rounded-md hover:bg-emerald-600 transition-colors"
@@ -74,12 +80,6 @@ export default async function Page({ searchParams }: PageProps) {
             className="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-colors"
           >
             Dashboard
-          </Link>
-          <Link
-            href="/viewall"
-            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-          >
-            View All
           </Link>
         </div>
       </div>
@@ -96,7 +96,7 @@ export default async function Page({ searchParams }: PageProps) {
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
-          baseUrl="/"
+          baseUrl="/viewall"
           searchParams={searchParams}
         />
       )}

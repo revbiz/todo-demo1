@@ -1,27 +1,16 @@
-import { TodoCategory, Priority, Status } from '@prisma/client';
-
-export type { TodoCategory, Priority, Status };
+import { Status, TodoCategory, Priority } from "@prisma/client";
 
 export type Todo = {
   id: string;
   title: string;
-  content?: string | null;
-  url?: string | null;
+  content: string | null;
+  status: Status;
   category: TodoCategory;
   priority: Priority;
-  status: Status;
-  dueDate?: Date | null;
-  color?: string | null;
+  url: string | null;
+  dueDate: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
 
-export type TodoFormData = {
-  title: string;
-  content?: string;
-  url?: string;
-  category: TodoCategory;
-  priority: Priority;
-  status: Status;
-  dueDate?: string;
-};
+export { Status, TodoCategory, Priority };

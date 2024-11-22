@@ -1,16 +1,10 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { TodoCategory, Priority, Status } from "@prisma/client";
+import Link from 'next/link';
+import { Priority, Status, TodoCategory } from "@prisma/client";
 import RichTextEditor from "@/components/RichTextEditor";
-import Link from "next/link";
-
-interface EditPageProps {
-  params: {
-    id: string;
-  };
-}
 
 interface Todo {
   id: string;
@@ -20,16 +14,16 @@ interface Todo {
   priority: Priority;
   status: Status;
   dueDate: string | null;
-  url: string;
-  createdAt: Date;
-  updatedAt: Date;
+  url: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
-const CATEGORIES = Object.values(TodoCategory);
-const PRIORITIES = Object.values(Priority);
-const STATUSES = Object.values(Status);
-
-export default function EditPage({ params }: EditPageProps) {
+export default function EditTodo({
+  params,
+}: {
+  params: { id: string };
+}) {
   const router = useRouter();
   const todoId = params.id;
   const [loading, setLoading] = useState(true);
@@ -47,23 +41,32 @@ export default function EditPage({ params }: EditPageProps) {
   useEffect(() => {
     const fetchTodo = async () => {
       try {
+        console.log('Fetching todo:', todoId);
         const response = await fetch(`/api/todos/${todoId}`);
         if (!response.ok) {
           throw new Error("Failed to fetch todo");
         }
         const data = await response.json();
+        console.log('API Response:', data);
         if (!data) {
           throw new Error("Todo not found");
         }
+        
+        // Store the raw HTML content
+        const rawTitle = data.title;
+        const rawContent = data.content;
+        console.log('Raw HTML content:', { rawTitle, rawContent });
+        
         setTodo(data);
-        setTitle(data.title);
-        setContent(data.content || "");
+        setTitle(rawTitle || "");
+        setContent(rawContent || "");
         setCategory(data.category);
         setPriority(data.priority);
         setStatus(data.status);
         setDueDate(data.dueDate || "");
         setUrl(data.url || "");
       } catch (err) {
+        console.error('Error:', err);
         setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
         setLoading(false);
@@ -78,124 +81,136 @@ export default function EditPage({ params }: EditPageProps) {
     setIsSubmitting(true);
     setError("");
 
-    try {
-      // Validate and clean URL
-      let cleanedUrl = url ? url.trim() : "";
-      if (cleanedUrl && !cleanedUrl.startsWith('http://') && !cleanedUrl.startsWith('https://')) {
-        cleanedUrl = `https://${cleanedUrl}`;
-      }
+    if (!title.replace(/<[^>]*>/g, '').trim()) {
+      setError("Please enter a title for your todo");
+      setIsSubmitting(false);
+      return;
+    }
 
+    try {
       const data = {
-        id: todoId,
         title,
-        content: content || "",
+        content,
         category,
         priority,
         status,
-        dueDate: dueDate || null,
-        url: cleanedUrl,
+        dueDate: dueDate ? new Date(dueDate).toISOString() : null,
+        url: url.trim() || null,
       };
 
       const response = await fetch(`/api/todos/${todoId}`, {
         method: "PUT",
-        headers: {
+        headers: { 
           "Content-Type": "application/json",
+          "Accept": "application/json"
         },
         body: JSON.stringify(data),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to update todo");
+        throw new Error("Failed to update todo");
       }
 
-      // Force revalidation of both home page and todo page
-      await Promise.all([
-        fetch('/api/revalidate?path=/', { cache: 'no-store' }),
-        fetch(`/api/revalidate?path=/view/${todoId}?page=true`, { cache: 'no-store' }),
-      ]);
-      
-      // Wait a moment for revalidation to complete
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
       router.push("/");
       router.refresh();
-
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update todo");
+      setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   if (loading) {
-    return <div className="p-4">Loading...</div>;
+    return (
+      <div className="max-w-4xl mx-auto p-4">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="space-y-3">
+            <div className="h-4 bg-gray-200 rounded w-full"></div>
+            <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+            <div className="h-4 bg-gray-200 rounded w-4/6"></div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="p-4 text-red-500">Error: {error}</div>;
-  }
-
-  if (!todo) {
-    return <div className="p-4">Todo not found</div>;
+    return (
+      <div className="max-w-4xl mx-auto p-4">
+        <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
+          <p className="text-red-700">{error}</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Edit Todo</h1>
+    <form onSubmit={handleSubmit} className="max-w-4xl mx-auto p-4 space-y-4">
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Edit Todo</h1>
+        <div className="space-x-2">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className={`bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed`}
+          >
+            {isSubmitting ? 'Saving...' : 'Save Changes'}
+          </button>
+          <Link
+            href="/"
+            className="inline-block px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50"
+          >
+            Cancel
+          </Link>
+        </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
-        <div>
-          <label
-            htmlFor="title"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Title
-          </label>
-          <RichTextEditor
-            initialContent={title}
-            onUpdate={setTitle}
-            placeholder="Enter todo title..."
-          />
+      {error && (
+        <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
+          <p className="text-red-700">{error}</p>
         </div>
+      )}
 
-        <div>
-          <label
-            htmlFor="content"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Content
-          </label>
-          <RichTextEditor
-            initialContent={content}
-            onUpdate={setContent}
-            placeholder="Enter todo content..."
-          />
-        </div>
+      <div className="space-y-2">
+        <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+          Title
+        </label>
+        <RichTextEditor
+          initialContent={title}
+          onUpdate={(newContent) => setTitle(newContent)}
+          placeholder="Enter todo title..."
+        />
+      </div>
 
-        <div>
-          <label
-            htmlFor="url"
-            className="block text-sm font-medium text-gray-700"
-          >
-            URL (optional)
-          </label>
-          <input
-            type="url"
-            id="url"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          />
-        </div>
+      <div className="space-y-2">
+        <label htmlFor="content" className="block text-sm font-medium text-gray-700">
+          Content
+        </label>
+        <RichTextEditor
+          initialContent={content}
+          onUpdate={(newContent) => setContent(newContent)}
+          placeholder="Enter todo content..."
+        />
+      </div>
 
+      <div>
+        <label htmlFor="url" className="block text-sm font-medium text-gray-700">
+          URL (optional)
+        </label>
+        <input
+          type="url"
+          id="url"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          placeholder="https://example.com"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
         <div>
-          <label
-            htmlFor="category"
-            className="block text-sm font-medium text-gray-700"
-          >
+          <label htmlFor="category" className="block text-sm font-medium text-gray-700">
             Category
           </label>
           <select
@@ -204,19 +219,16 @@ export default function EditPage({ params }: EditPageProps) {
             onChange={(e) => setCategory(e.target.value as TodoCategory)}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           >
-            {CATEGORIES.map((cat) => (
+            {Object.values(TodoCategory).map((cat) => (
               <option key={cat} value={cat}>
-                {cat.replace(/_/g, " ")}
+                {cat}
               </option>
             ))}
           </select>
         </div>
 
         <div>
-          <label
-            htmlFor="priority"
-            className="block text-sm font-medium text-gray-700"
-          >
+          <label htmlFor="priority" className="block text-sm font-medium text-gray-700">
             Priority
           </label>
           <select
@@ -225,19 +237,16 @@ export default function EditPage({ params }: EditPageProps) {
             onChange={(e) => setPriority(e.target.value as Priority)}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           >
-            {PRIORITIES.map((pri) => (
+            {Object.values(Priority).map((pri) => (
               <option key={pri} value={pri}>
-                {pri.replace(/_/g, " ")}
+                {pri}
               </option>
             ))}
           </select>
         </div>
 
         <div>
-          <label
-            htmlFor="status"
-            className="block text-sm font-medium text-gray-700"
-          >
+          <label htmlFor="status" className="block text-sm font-medium text-gray-700">
             Status
           </label>
           <select
@@ -246,46 +255,27 @@ export default function EditPage({ params }: EditPageProps) {
             onChange={(e) => setStatus(e.target.value as Status)}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           >
-            {STATUSES.map((stat) => (
+            {Object.values(Status).map((stat) => (
               <option key={stat} value={stat}>
-                {stat.replace(/_/g, " ")}
+                {stat.replace(/_/g, ' ')}
               </option>
             ))}
           </select>
         </div>
 
         <div>
-          <label
-            htmlFor="dueDate"
-            className="block text-sm font-medium text-gray-700"
-          >
+          <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700">
             Due Date (optional)
           </label>
           <input
-            type="datetime-local"
+            type="date"
             id="dueDate"
-            value={dueDate}
+            value={dueDate ? new Date(dueDate).toISOString().split('T')[0] : ''}
             onChange={(e) => setDueDate(e.target.value)}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           />
         </div>
-
-        <div className="flex gap-4">
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="inline-flex justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
-          >
-            {isSubmitting ? "Saving..." : "Save Changes"}
-          </button>
-          <Link
-            href="/"
-            className="inline-flex justify-center rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
-            Cancel
-          </Link>
-        </div>
-      </form>
-    </div>
+      </div>
+    </form>
   );
 }

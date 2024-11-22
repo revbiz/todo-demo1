@@ -1,46 +1,58 @@
 'use client';
 
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import { TodoCategory, Priority, Status } from '@prisma/client';
+import type { SortField, SortOrder } from './SortFilter';
 
 interface PaginationProps {
   currentPage: number;
   totalPages: number;
+  baseUrl: string;
+  searchParams: {
+    page?: string;
+    category?: TodoCategory | 'All';
+    priority?: Priority | 'All';
+    status?: Status | 'All';
+    sortBy?: SortField;
+    sortOrder?: SortOrder;
+  };
 }
 
-export function Pagination({ currentPage, totalPages }: PaginationProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  const handlePageChange = (pageNumber: number) => {
-    const newParams = new URLSearchParams(searchParams.toString());
-    newParams.set('page', pageNumber.toString());
-    const newUrl = `${pathname}?${newParams.toString()}`;
-    router.push(newUrl);
+export function Pagination({ currentPage, totalPages, baseUrl, searchParams }: PaginationProps) {
+  const getPageUrl = (page: number) => {
+    const newSearchParams = new URLSearchParams();
+    
+    // Add all current search params except page
+    for (const [key, value] of Object.entries(searchParams)) {
+      if (key !== 'page' && value) {
+        newSearchParams.set(key, value);
+      }
+    }
+    
+    // Add the new page number
+    newSearchParams.set('page', page.toString());
+    
+    return `${baseUrl}?${newSearchParams.toString()}`;
   };
 
   if (totalPages <= 1) return null;
 
   return (
-    <div className="flex justify-center items-center gap-1 mt-4">
-      <button
-        type="button"
-        onClick={() => handlePageChange(1)}
-        disabled={currentPage === 1}
-        className={`px-3 py-1 rounded ${
+    <div className="flex justify-center gap-2 mt-4">
+      <Link
+        href={getPageUrl(1)}
+        className={`px-4 py-2 text-sm rounded-md ${
           currentPage === 1
             ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
             : 'bg-white text-gray-700 hover:bg-gray-50'
         } border`}
       >
         First
-      </button>
+      </Link>
       
-      <button
-        type="button"
-        onClick={() => handlePageChange(currentPage - 1)}
-        disabled={currentPage === 1}
-        className={`px-3 py-1 rounded ${
+      <Link
+        href={getPageUrl(currentPage - 1)}
+        className={`px-4 py-2 text-sm rounded-md ${
           currentPage === 1
             ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
             : 'bg-white text-gray-700 hover:bg-gray-50'
@@ -50,7 +62,7 @@ export function Pagination({ currentPage, totalPages }: PaginationProps) {
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
         </svg>
-      </button>
+      </Link>
 
       {/* Page Numbers */}
       <div className="flex items-center gap-1">
@@ -74,27 +86,24 @@ export function Pagination({ currentPage, totalPages }: PaginationProps) {
           }
 
           return (
-            <button
-              type="button"
+            <Link
               key={pageNumber}
-              onClick={() => handlePageChange(pageNumber)}
-              className={`px-3 py-1 rounded ${
+              href={getPageUrl(pageNumber)}
+              className={`px-4 py-2 text-sm rounded-md ${
                 currentPage === pageNumber
                   ? 'bg-blue-500 text-white'
                   : 'bg-white text-gray-700 hover:bg-gray-50'
               } border`}
             >
               {pageNumber}
-            </button>
+            </Link>
           );
         })}
       </div>
 
-      <button
-        type="button"
-        onClick={() => handlePageChange(currentPage + 1)}
-        disabled={currentPage === totalPages}
-        className={`px-3 py-1 rounded ${
+      <Link
+        href={getPageUrl(currentPage + 1)}
+        className={`px-4 py-2 text-sm rounded-md ${
           currentPage === totalPages
             ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
             : 'bg-white text-gray-700 hover:bg-gray-50'
@@ -104,20 +113,18 @@ export function Pagination({ currentPage, totalPages }: PaginationProps) {
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
         </svg>
-      </button>
+      </Link>
 
-      <button
-        type="button"
-        onClick={() => handlePageChange(totalPages)}
-        disabled={currentPage === totalPages}
-        className={`px-3 py-1 rounded ${
+      <Link
+        href={getPageUrl(totalPages)}
+        className={`px-4 py-2 text-sm rounded-md ${
           currentPage === totalPages
             ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
             : 'bg-white text-gray-700 hover:bg-gray-50'
         } border`}
       >
         Last
-      </button>
+      </Link>
     </div>
   );
 }

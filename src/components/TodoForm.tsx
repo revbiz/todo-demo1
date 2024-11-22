@@ -2,6 +2,7 @@
 
 import { TodoCategory, Priority, Status } from "@prisma/client";
 import { useState, useRef, useEffect } from "react";
+import DOMPurify from 'isomorphic-dompurify';
 
 interface Todo {
   id?: string;
@@ -37,13 +38,12 @@ export function TodoForm({
   const [error, setError] = useState("");
   const [currentColor, setCurrentColor] = useState<string | null>(null);
   const titleRef = useRef<HTMLDivElement>(null);
-  const [title, setTitle] = useState(todo.title);
 
   useEffect(() => {
     if (titleRef.current) {
-      titleRef.current.innerHTML = title;
+      titleRef.current.innerHTML = DOMPurify.sanitize(todo.title);
     }
-  }, [title]);
+  }, [todo.title]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -55,14 +55,13 @@ export function TodoForm({
     
     // Add form fields to FormData
     formData.append('id', todo.id || '');
-    formData.append('title', (formElements.namedItem('title') as HTMLInputElement).value);
+    formData.append('title', titleRef.current?.innerHTML || '');
     formData.append('content', (formElements.namedItem('content') as HTMLTextAreaElement).value);
     formData.append('url', (formElements.namedItem('url') as HTMLInputElement).value);
     formData.append('category', (formElements.namedItem('category') as HTMLSelectElement).value);
     formData.append('priority', (formElements.namedItem('priority') as HTMLSelectElement).value);
     formData.append('status', (formElements.namedItem('status') as HTMLSelectElement).value);
     formData.append('dueDate', (formElements.namedItem('dueDate') as HTMLInputElement).value);
-    formData.append('color', currentColor || '');
     
     try {
       await onSubmit(formData);
@@ -104,13 +103,11 @@ export function TodoForm({
           aria-label="Title"
           className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 min-h-[2.5rem]"
           style={currentColor ? { color: currentColor } : undefined}
-          onInput={(e) => e.currentTarget.textContent && setTitle(e.currentTarget.textContent)}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault();
             }
           }}
-          dangerouslySetInnerHTML={{ __html: title }}
         />
       </div>
 
@@ -150,10 +147,9 @@ export function TodoForm({
           defaultValue={todo.category}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
         >
-          <option value="Event">Event</option>
-          <option value="Reminder">Reminder</option>
-          <option value="Someday">Someday</option>
-          <option value="Now">Now</option>
+          {Object.values(TodoCategory).map((cat) => (
+            <option key={cat} value={cat}>{cat}</option>
+          ))}
         </select>
       </div>
 
@@ -167,9 +163,9 @@ export function TodoForm({
           defaultValue={todo.priority}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
         >
-          <option value="High">High</option>
-          <option value="Medium">Medium</option>
-          <option value="Low">Low</option>
+          {Object.values(Priority).map((pri) => (
+            <option key={pri} value={pri}>{pri}</option>
+          ))}
         </select>
       </div>
 
@@ -183,11 +179,9 @@ export function TodoForm({
           defaultValue={todo.status}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
         >
-          <option value="Active">Active</option>
-          <option value="Pending">Pending</option>
-          <option value="Complete">Complete</option>
-          <option value="Forget">Forget</option>
-          <option value="OnHold">On Hold</option>
+          {Object.values(Status).map((stat) => (
+            <option key={stat} value={stat}>{stat}</option>
+          ))}
         </select>
       </div>
 

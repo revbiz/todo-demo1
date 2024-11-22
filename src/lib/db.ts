@@ -123,9 +123,31 @@ export async function deleteTodo(id: string) {
 
 export async function getTodoById(id: string) {
   try {
-    return await prisma.todo.findUnique({
+    const todo = await prisma.todo.findUnique({
       where: { id },
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        category: true,
+        priority: true,
+        status: true,
+        dueDate: true,
+        url: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
+
+    if (!todo) {
+      throw new Error('Todo not found');
+    }
+
+    return {
+      ...todo,
+      title: todo.title || '',
+      content: todo.content || '',
+    };
   } catch (error) {
     console.error('Error fetching todo:', error);
     throw new Error('Failed to fetch todo');

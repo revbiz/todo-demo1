@@ -3,19 +3,31 @@
 @tailwind utilities;
 
 .rich-text-content {
-  @apply text-base leading-relaxed;
+  @apply text-base leading-relaxed break-words;
 }
 
-.rich-text-content p:not(:last-child) {
-  @apply mb-3;
+.rich-text-content p {
+  @apply mb-4 last:mb-0;
 }
 
 .rich-text-content ul {
-  @apply list-disc pl-6 mb-3 space-y-1;
+  @apply list-disc pl-6 mb-4;
 }
 
 .rich-text-content ol {
-  @apply list-decimal pl-6 mb-3 space-y-1;
+  @apply list-decimal pl-6 mb-4;
+}
+
+.rich-text-content strong {
+  @apply font-bold;
+}
+
+.rich-text-content em {
+  @apply italic;
+}
+
+.rich-text-content u {
+  @apply underline;
 }
 
 .rich-text-content li {
@@ -109,6 +121,10 @@
   display: inline;
 }
 
+.title-content .rich-text-content {
+  @apply inline;
+}
+
 /* Content preview styles */
 .content-preview {
   @apply break-words text-sm text-gray-600 whitespace-normal;
@@ -127,6 +143,10 @@
 .content-preview p {
   margin: 0;
   padding: 0;
+}
+
+.content-preview .rich-text-content {
+  @apply text-gray-700;
 }
 
 /* Wrapper styles */
