@@ -62,13 +62,24 @@ export default function TodoList({ todos }: TodoListProps) {
           }`}
           onClick={() => setSelectedTodoId(todo.id)}
         >
-          <div className="flex justify-between items-start">
-            <div className="flex-1">
-              <h3 className="text-xl font-semibold mb-2">
+          <div className="flex flex-col">
+            <div>
+              <h3 className="text-xl font-semibold mb-2 line-clamp-1">
                 <RichTextContent content={todo.title} />
               </h3>
               <div className="prose max-w-none">
-                <RichTextContent content={todo.content || ''} />
+                <div className="line-clamp-2 mb-1">
+                  <RichTextContent content={todo.content || ''} />
+                </div>
+                {todo.content && (
+                  <Link
+                    href={`/view/${todo.id}`}
+                    className="text-blue-600 hover:text-blue-800 text-sm"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Read more
+                  </Link>
+                )}
               </div>
               <div className="mt-4 flex flex-wrap gap-2">
                 <span className={`px-2 py-1 rounded text-sm ${getStatusColor(todo.status)}`}>
@@ -78,47 +89,47 @@ export default function TodoList({ todos }: TodoListProps) {
                   Created: {formatDate(todo.createdAt)}
                 </span>
               </div>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleStatusChange(
-                    todo,
-                    todo.status === Status.COMPLETE ? Status.PENDING : Status.COMPLETE
-                  );
-                }}
-                className={`px-3 py-1 rounded-md text-sm ${
-                  todo.status === Status.COMPLETE
-                    ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
-                    : 'bg-green-500 hover:bg-green-600 text-white'
-                }`}
-              >
-                {todo.status === Status.COMPLETE ? 'Undo' : 'Complete'}
-              </button>
-              <Link
-                href={`/edit/${todo.id}`}
-                className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm"
-                onClick={(e) => e.stopPropagation()}
-              >
-                Edit
-              </Link>
-              <Link
-                href={`/view/${todo.id}`}
-                className="px-3 py-1 bg-purple-500 text-white rounded-md hover:bg-purple-600 text-sm"
-                onClick={(e) => e.stopPropagation()}
-              >
-                View
-              </Link>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDelete(todo.id);
-                }}
-                className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm"
-              >
-                Delete
-              </button>
+              <div className="mt-4 flex gap-2">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleStatusChange(
+                      todo,
+                      todo.status === Status.COMPLETE ? Status.PENDING : Status.COMPLETE
+                    );
+                  }}
+                  className={`px-3 py-1 rounded-md text-sm ${
+                    todo.status === Status.COMPLETE
+                      ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
+                      : 'bg-green-500 hover:bg-green-600 text-white'
+                  }`}
+                >
+                  {todo.status === Status.COMPLETE ? 'Undo' : 'Complete'}
+                </button>
+                <Link
+                  href={`/edit/${todo.id}`}
+                  className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Edit
+                </Link>
+                <Link
+                  href={`/view/${todo.id}`}
+                  className="px-3 py-1 bg-purple-500 text-white rounded-md hover:bg-purple-600 text-sm"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  View
+                </Link>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(todo.id);
+                  }}
+                  className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           </div>
         </div>
