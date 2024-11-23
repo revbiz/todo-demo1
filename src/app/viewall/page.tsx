@@ -126,7 +126,18 @@ export default async function ViewAllPage({ searchParams }: PageProps) {
   };
 
   return (
-    <main className="container mx-auto px-1">
+    <main className="container mx-auto px-4">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-4xl font-bold">All Todos</h1>
+        <div className="flex gap-4">
+          <Link
+            href="/"
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Back to Home
+          </Link>
+        </div>
+      </div>
       <header className="flex flex-col gap-3 mb-3">
         <div>
           <h1 className="text-2xl font-bold">
@@ -171,6 +182,12 @@ export default async function ViewAllPage({ searchParams }: PageProps) {
             className="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-colors"
           >
             Dashboard
+          </Link>
+          <Link
+            href="/todotable"
+            className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
+          >
+            Todo Table
           </Link>
         </nav>
       </header>

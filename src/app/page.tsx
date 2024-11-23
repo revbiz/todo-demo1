@@ -59,7 +59,13 @@ export default async function Page({ searchParams }: PageProps) {
   const totalPages = Math.ceil(totalCount / itemsPerPage);
 
   return (
-    <main className="container mx-auto px-1">
+    <main className="container mx-auto px-4">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-4xl font-bold">Todos</h1>
+        <div className="flex gap-4">
+        </div>
+      </div>
+
       <div className="flex justify-between items-center mb-3">
         <h1 className="text-2xl font-bold">Todos PG ({totalCount})</h1>
         <div className="flex gap-2">
@@ -80,6 +86,12 @@ export default async function Page({ searchParams }: PageProps) {
             className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
           >
             View All
+          </Link>
+          <Link
+            href="/todotable"
+            className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
+          >
+            Todo Table
           </Link>
         </div>
       </div>
